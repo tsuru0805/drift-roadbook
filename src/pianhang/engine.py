@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import re
 import threading
+import time
 import uuid
 from datetime import datetime
 from typing import Callable
@@ -26,8 +27,8 @@ from .ports import NullReminder, Reminder, Storage, TemperatureSource
 from .prompts import PromptSet
 from .session_store import SessionStore
 
-EMPTY_HANDED = {"空手", "empty-handed", "empty handed", "nothing"}
 MAX_LUGGAGE_CHARS = 30
+PHOTO_STALE_SECONDS = 15 * 60
 MIN_TRAVELOGUE_CHARS = 20
 
 
@@ -95,16 +96,33 @@ class DriftEngine:
         return (f"{session['date']} 出发去「{d['short_name']}」，走了 {session['round']} 轮，还没写游记。\n"
                 f"最后几段：\n{tail}")
 
+    @staticmethod
+    def _foreign(session: dict) -> bool:
+        """A session this engine did not open (e.g. another mode sharing the state directory)."""
+        return not isinstance(session.get("destination"), dict) or "short_name" not in session["destination"]
+
+    _FOREIGN = Receipt(False, "这段进行中的偏航不是这台引擎开的（另一种偏航），这里处理不了它。")
+
     def _last_line(self, traveler: str) -> str:
+        """Report once what happened to the last drift's photo. Call with the traveler's lock held."""
         last = self.store.get_last(traveler) or {}
         photo = last.get("photo")
-        if not last or photo in (None, "searching") or last.get("photo_reported"):
+        if not last or photo is None or last.get("photo_reported"):
             return ""
+        name = last.get("short_name", "")
+        if photo == "searching":
+            if time.time() - float(last.get("photo_started", 0)) < PHOTO_STALE_SECONDS:
+                return ""
+            line = f"（上次「{name}」的偏航：找照片被中断了（服务重启？），路书上那一站暂时不放图。）\n"
+        elif photo == "found":
+            line = f"（上次「{name}」的偏航：照片找到了，已放进路书。）\n"
+        elif photo == "none":
+            line = f"（上次「{name}」的偏航：没有找到合适的照片，路书上那一站不放图。）\n"
+        else:
+            line = f"（上次「{name}」的偏航：找照片时出错了（{last.get('photo_error', '未知错误')}），路书上那一站暂时不放图。）\n"
         last["photo_reported"] = True
         self.store.put_last(traveler, last)
-        if photo == "found":
-            return f"（上次「{last.get('short_name', '')}」的偏航：照片找到了，已放进路书。）\n"
-        return f"（上次「{last.get('short_name', '')}」的偏航：没有找到合适的照片，路书上那一站不放图。）\n"
+        return line
 
     # ── set off ─────────────────────────────────────────────────────────────
 
@@ -113,6 +131,8 @@ class DriftEngine:
             return bad
         with self.store.locked(traveler):
             open_session = self.store.get(traveler)
+            if open_session and self._foreign(open_session):
+                return Receipt(False, "你还有一段别的偏航没收尾，先把它收尾或放弃再出发。", {"unfinished": True})
             if open_session:
                 return Receipt(False, (
                     "你上一次的偏航还没收尾，先把它写完再出发：\n\n" + self._summary(open_session) +
@@ -258,6 +278,8 @@ class DriftEngine:
             s = self.store.get(traveler)
             if not s:
                 return Receipt(False, "现在没有进行中的偏航。要出发请调用 start_drift。")
+            if self._foreign(s):
+                return self._FOREIGN
             if s["round"] >= self.max_rounds:
                 return Receipt(False, self.prompts.last_round.format(round=s["round"]) +
                                "\n调用 finish_drift(travelogue=…, luggage=…)。", {"round": s["round"]})
@@ -293,6 +315,12 @@ class DriftEngine:
             s = self.store.get(traveler)
             if not s:
                 return Receipt(False, "现在没有进行中的偏航，没有可以收尾的。")
+            if self._foreign(s):
+                return self._FOREIGN
+            draft = s.get("draft") or {}
+            travelogue = travelogue or draft.get("travelogue", "")
+            luggage = luggage or draft.get("luggage", "")
+            note = note or draft.get("note", "")
             missing = []
             if len(travelogue) < MIN_TRAVELOGUE_CHARS:
                 missing.append("travelogue（你自己写的游记）")
@@ -320,12 +348,21 @@ class DriftEngine:
             try:
                 drift_id = self.storage.save(record)
             except Exception as e:
+                s["draft"] = {"travelogue": travelogue, "luggage": luggage, "note": note}
+                self.store.put(traveler, s)
                 return Receipt(False, f"游记没存进去：{type(e).__name__}: {str(e)[:200]}\n"
-                                      "偏航还留着，你写的游记没丢——稍后再调用一次 finish_drift。")
-            self.store.clear(traveler)
-            self.store.put_last(traveler, {"drift_id": drift_id, "short_name": dest["short_name"],
-                                           "photo": "searching"})
-        self.reminder.closed(traveler, s["id"], True)
+                                      "偏航还留着，你写的游记和带走的东西也替你存在偏航里了——"
+                                      "稍后直接调用 finish_drift() 就行，不用重写。")
+            try:
+                self.store.clear(traveler)
+                self.store.put_last(traveler, {"drift_id": drift_id, "short_name": dest["short_name"],
+                                               "photo": "searching", "photo_started": time.time()})
+            except OSError:
+                pass   # the drift itself is stored; worst case the next start shows it once more
+        try:
+            self.reminder.closed(traveler, s["id"], True)
+        except Exception:
+            pass
         record.id = drift_id
         self._photo(traveler, record, dest)
         level = {"spot": "具体地点", "street": "街道", "city": "城市"}.get(where.level or "", "")
@@ -359,12 +396,16 @@ class DriftEngine:
                         place.lat, place.lon, place.level = photo.lat, photo.lon, photo.tier
                     self.storage.update_place(record.id, place)
                     outcome = "found"
-            except Exception:
-                outcome = "error"
+            except Exception as e:
+                outcome, error = "error", f"{type(e).__name__}: {str(e)[:120]}"
+            else:
+                error = ""
             with self.store.locked(traveler):
                 last = self.store.get_last(traveler) or {}
                 if last.get("drift_id") == record.id:
                     last["photo"] = outcome
+                    if error:
+                        last["photo_error"] = error
                     self.store.put_last(traveler, last)
             if self.on_photo:
                 self.on_photo(traveler, outcome, place)
@@ -385,6 +426,8 @@ class DriftEngine:
             s = self.store.get(traveler)
             if not s:
                 return Receipt(False, "现在没有进行中的偏航。")
+            if self._foreign(s):
+                return self._FOREIGN
             self.store.clear(traveler)
         self.reminder.closed(traveler, s["id"], False)
         return Receipt(True, f"放弃了「{s['destination']['short_name']}」那次偏航，没有留下记录。")
@@ -392,10 +435,13 @@ class DriftEngine:
     def status(self, traveler: str) -> Receipt:
         if (bad := self._check_traveler(traveler)):
             return bad
-        s = self.store.get(traveler)
-        if s:
-            return Receipt(True, "进行中：\n" + self._summary(s), {"in_progress": True, "round": s["round"]})
-        line = self._last_line(traveler)
+        with self.store.locked(traveler):
+            s = self.store.get(traveler)
+            if s and self._foreign(s):
+                return Receipt(True, "有一段别的偏航在进行中。", {"in_progress": True})
+            if s:
+                return Receipt(True, "进行中：\n" + self._summary(s), {"in_progress": True, "round": s["round"]})
+            line = self._last_line(traveler)
         return Receipt(True, (line or "") + "现在没有进行中的偏航。", {"in_progress": False})
 
     def refind_photo(self, drift_id: str, photo_queries: list[str]) -> Receipt:

@@ -20,11 +20,13 @@ class JournalTemperature:
 
     def collect(self, traveler: str, mood: str) -> str | None:
         parts: list[str] = []
-        if self.folder and self.folder.is_dir():
-            # <folder>/<traveler>/ if it exists, so travelers don't read each other's notes
-            root = self.folder / traveler if self.per_traveler and (self.folder / traveler).is_dir() else self.folder
+        safe = bool(traveler) and "/" not in traveler and "\\" not in traveler and traveler not in (".", "..")
+        if self.folder and self.folder.is_dir() and safe:
+            # per traveler: only <folder>/<traveler>/ — never the shared root, so travelers don't read
+            # each other's notes; without per_traveler the whole folder is everyone's
+            root = self.folder / traveler if self.per_traveler else self.folder
             cutoff = time.time() - self.days * 86400
-            files = sorted((p for p in root.iterdir()
+            files = [] if not root.is_dir() else sorted((p for p in root.iterdir()
                             if p.is_file() and p.suffix in (".md", ".txt") and p.stat().st_mtime >= cutoff),
                            key=lambda p: p.stat().st_mtime, reverse=True)
             used = 0

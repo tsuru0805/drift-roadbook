@@ -143,18 +143,19 @@ class PhotoFinder:
 
     def _pick(self, client: httpx.Client, cands: list[dict], travelogue: str) -> int | None:
         if self.narrator is None or not getattr(self.narrator, "can_see_images", False):
-            # nobody can look: trust the most specific search hit only
-            return 0
+            # nobody can look at it, so nobody can vouch for it: a wrong photo is worse than none
+            return None
         with tempfile.TemporaryDirectory(prefix="pianhang-photo-") as d:
             paths, index = [], []
             for i, c in enumerate(cands):
+                n = len(paths)   # files are named by their position in the list the model sees
                 try:
                     r = client.get(_thumb_url(c["image"], _THUMB_W), headers=UA)
                 except httpx.HTTPError:
                     continue
                 if r.status_code != 200 or not r.headers.get("content-type", "").startswith("image/"):
                     continue
-                p = Path(d) / f"c{i}.jpg"
+                p = Path(d) / f"{n}.jpg"
                 p.write_bytes(r.content)
                 paths.append(str(p))
                 index.append(i)
@@ -168,6 +169,6 @@ class PhotoFinder:
             pick = json.loads(m.group(0)).get("pick") if m else None
         except json.JSONDecodeError:
             return None
-        if isinstance(pick, int) and 0 <= pick < len(index):
+        if isinstance(pick, int) and not isinstance(pick, bool) and 0 <= pick < len(index):
             return index[pick]
         return None

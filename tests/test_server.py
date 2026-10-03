@@ -55,3 +55,21 @@ def test_refuses_public_bind_without_key(monkeypatch, tmp_path):
     monkeypatch.delenv("PIANHANG_TOKEN", raising=False)
     with pytest.raises(SystemExit):
         server.main(["serve", "--host", "0.0.0.0"])
+
+
+def test_without_key_api_only_answers_as_localhost(eng):
+    c = TestClient(server.build_http_app(eng, None))
+    assert c.get("/api/config", headers={"host": "localhost:8790"}).status_code == 200
+    assert c.get("/api/config", headers={"host": "evil.example"}).status_code == 403
+
+
+def test_journal_reads_only_the_travelers_own_folder(tmp_path):
+    from pianhang.journal import JournalTemperature
+    (tmp_path / "aki").mkdir()
+    (tmp_path / "aki" / "d.md").write_text("aki 的日记", encoding="utf-8")
+    (tmp_path / "shared.md").write_text("公共笔记", encoding="utf-8")
+    (tmp_path.parent / "outside.md").write_text("目录外", encoding="utf-8")
+    j = JournalTemperature(tmp_path)
+    assert "aki 的日记" in j.collect("aki", "") and "公共笔记" not in j.collect("aki", "")
+    assert j.collect("ren", "") is None
+    assert j.collect("..", "") is None and j.collect("../x", "下雨") == "[出发时说] 下雨"

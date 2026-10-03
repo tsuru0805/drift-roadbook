@@ -82,7 +82,8 @@ pianhang serve --host 0.0.0.0 --port 8790
 | `ANTHROPIC_API_KEY` / `ANTHROPIC_BASE_URL` | — | `anthropic` 模式用 |
 | `PIANHANG_TOKEN` | — | HTTP 访问密钥；没设只允许监听本机 |
 | `PIANHANG_DATA_DIR` | `./pianhang-data` | 偏航记录（SQLite）与进行中的偏航 |
-| `PIANHANG_JOURNAL_DIR` | — | 读「今天的心情」用的文本文件夹（`.md`/`.txt`，近 3 天；有 `<目录>/<旅行者id>/` 时只读自己的） |
+| `PIANHANG_JOURNAL_DIR` | — | 读「今天的心情」用的文本文件夹（`.md`/`.txt`，近 3 天）。每个旅行者只读 `<目录>/<旅行者id>/` |
+| `PIANHANG_JOURNAL_SHARED` | — | 设为 `1`：整个文件夹所有旅行者共用 |
 | `PIANHANG_HOME` | `0,0,home` | 路书起点 `纬度,经度,名字` |
 | `PIANHANG_MIN_ROUNDS` / `PIANHANG_MAX_ROUNDS` | `4` / `10` | 轮数 |
 | `PIANHANG_TZ` | `Asia/Shanghai` | 偏航日期按哪个时区算 |

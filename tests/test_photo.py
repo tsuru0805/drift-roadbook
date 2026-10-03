@@ -62,9 +62,29 @@ def test_geotagged_candidates_join_the_spot_tier():
     assert ph.page.endswith("7.jpg")
 
 
-def test_without_eyes_takes_the_most_specific_hit():
+def test_without_eyes_no_photo():
+    """Nobody can look → nobody can vouch for it → no photo (a wrong one is worse than none)."""
     c = commons({"spot": [page(0, "First.jpg"), page(1, "Second.jpg")]})
-    assert PhotoFinder(None, client=c).find(["spot"], None, "游记").page.endswith("0.jpg")
+    assert PhotoFinder(None, client=c).find(["spot"], None, "游记") is None
+
+
+def test_pick_index_follows_the_list_the_model_saw_and_rejects_bools():
+    def h(req):
+        u = str(req.url)
+        if "upload.wikimedia.org" in u:
+            if "-0.jpg" in u:                       # first candidate fails to download
+                return httpx.Response(404)
+            return httpx.Response(200, content=JPEG, headers={"content-type": "image/jpeg"})
+        return httpx.Response(200, json={"query": {"pages": {str(i): p for i, p in enumerate(
+            [page(0, "Broken.jpg"), page(1, "Wanted.jpg"), page(2, "Other.jpg")])}}})
+    c = httpx.Client(transport=httpx.MockTransport(h))
+
+    class Named(Eye):
+        def look(self, prompt, paths):
+            assert [p.rsplit("/", 1)[1] for p in paths] == ["0.jpg", "1.jpg"]
+            return super().look(prompt, paths)
+    assert PhotoFinder(Named([0]), client=c).find(["spot"], None, "游记").page.endswith("1.jpg")
+    assert PhotoFinder(Eye(["true"]), client=c).find(["spot"], None, "游记") is None
 
 
 def test_no_queries_no_coords_no_photo():

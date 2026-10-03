@@ -34,19 +34,37 @@ class ClaudeCLINarrator:
         self.timeout = timeout
 
     def _env(self) -> dict[str, str]:
-        env = {k: v for k, v in os.environ.items() if "API_KEY" not in k and "ANTHROPIC" not in k}
+        # strip every route to pay-per-use: API keys, and the switches that send Claude Code to a
+        # cloud provider's billing (Bedrock / Vertex / Foundry)
+        env = {k: v for k, v in os.environ.items()
+               if "API_KEY" not in k and "ANTHROPIC" not in k and not k.startswith("CLAUDE_CODE_USE_")}
         env.setdefault("HOME", os.path.expanduser("~"))
         if self.oauth_token:
             env["CLAUDE_CODE_OAUTH_TOKEN"] = self.oauth_token
         return env
 
+    @staticmethod
+    def check_settings(home: str | None = None) -> None:
+        """Refuse to run if Claude Code settings could route calls to an API key (`apiKeyHelper`
+        or an API key in the settings' `env`) — that would bypass the environment scrubbing."""
+        path = Path(home or os.path.expanduser("~")) / ".claude" / "settings.json"
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return
+        env = data.get("env") if isinstance(data.get("env"), dict) else {}
+        if data.get("apiKeyHelper") or any("API_KEY" in k or k.startswith("CLAUDE_CODE_USE_") for k in env):
+            raise NarratorError(f"{path} 里配了 apiKeyHelper / API key，claude -p 可能走按量计费——不运行。")
+
     def _run(self, prompt: str, args: list[str]) -> str:
         self.workdir.mkdir(parents=True, exist_ok=True)
-        cmd = [self.binary, "-p", prompt, *args,
+        self.check_settings(self._env().get("HOME"))
+        # the prompt goes in on stdin: text starting with "-" must never be read as an option
+        cmd = [self.binary, "-p", *args,
                "--permission-mode", "dontAsk", "--model", self.model,
                "--effort", self.effort, "--output-format", "json", "--disable-slash-commands"]
         try:
-            r = subprocess.run(cmd, capture_output=True, env=self._env(), stdin=subprocess.DEVNULL,
+            r = subprocess.run(cmd, input=prompt.encode("utf-8"), capture_output=True, env=self._env(),
                                timeout=self.timeout, cwd=self.workdir)
         except FileNotFoundError:
             raise NarratorError(f"找不到 claude 命令（{self.binary}）——这台机器没装 Claude Code？") from None
@@ -88,7 +106,8 @@ class ClaudeCLINarrator:
     def look(self, prompt: str, image_paths: list[str]) -> str:
         dirs = sorted({str(Path(p).parent) for p in image_paths})
         listing = "\n".join(f"{i}: {p}" for i, p in enumerate(image_paths))
-        args = ["--tools", "Read", "--allowedTools", "Read", "--no-session-persistence"]
+        args = ["--system-prompt", "你在帮旅行系统挑照片。只按要求读图、只输出被要求的 JSON。",
+                "--tools", "Read", "--allowedTools", "Read", "--no-session-persistence"]
         for d in dirs:
             args += ["--add-dir", d]
         return self._run(f"逐张读取这些图片（用 Read 工具）：\n{listing}\n\n{prompt}", args)

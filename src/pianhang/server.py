@@ -74,7 +74,8 @@ def build_engine() -> DriftEngine:
     return DriftEngine(
         storage=SQLiteStorage(data_dir / "drifts.db"), store=SessionStore(data_dir / "state"),
         narrator=_narrator(data_dir), travelers=_travelers(),
-        temperature=JournalTemperature(os.getenv("PIANHANG_JOURNAL_DIR") or None),
+        temperature=JournalTemperature(os.getenv("PIANHANG_JOURNAL_DIR") or None,
+                                       per_traveler=os.getenv("PIANHANG_JOURNAL_SHARED", "") != "1"),
         min_rounds=int(os.getenv("PIANHANG_MIN_ROUNDS", "4")),
         max_rounds=int(os.getenv("PIANHANG_MAX_ROUNDS", "10")),
         tz=os.getenv("PIANHANG_TZ", "Asia/Shanghai"))
@@ -174,9 +175,17 @@ def build_http_app(engine: DriftEngine, token: str | None):
         r = await asyncio.to_thread(engine.storage.get, request.path_params["drift_id"])
         return JSONResponse(r.to_api(engine.name(r.traveler))) if r else err(404, "not found")
 
+    loopback_hosts = {"127.0.0.1", "localhost", "::1", "[::1]", "testserver"}
+
     class Auth(BaseHTTPMiddleware):
         async def dispatch(self, request, call_next):
             path = request.url.path
+            if not token and path.startswith("/api/"):
+                # no key configured = this server is only for this machine; refuse anything that
+                # arrives under another host name (a tunnel, a forwarded port, DNS rebinding)
+                host = (request.headers.get("host") or "").rsplit(":", 1)[0].lower()
+                if host not in loopback_hosts:
+                    return err(403, "no PIANHANG_TOKEN set: only reachable as localhost")
             if token and (path.startswith("/api/") or path.startswith("/mcp")):
                 given = request.query_params.get("key") or ""
                 h = request.headers.get("authorization", "")
@@ -212,7 +221,8 @@ def main(argv: list[str] | None = None) -> None:
     if not token and args.host not in ("127.0.0.1", "localhost", "::1"):
         sys.exit("Refusing to listen on a non-loopback address without PIANHANG_TOKEN.")
     import uvicorn
-    uvicorn.run(build_http_app(engine, token), host=args.host, port=args.port)
+    # no access log: the key may ride in the query string (?key=) and must not land in log files
+    uvicorn.run(build_http_app(engine, token), host=args.host, port=args.port, access_log=False)
 
 
 if __name__ == "__main__":

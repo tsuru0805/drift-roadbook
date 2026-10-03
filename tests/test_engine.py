@@ -162,7 +162,7 @@ def test_storage_failure_keeps_the_drift(make, tmp_path):
     e.start("aki")
     walk(e, "aki", 4)
     r = e.finish("aki", TRAVELOGUE, "石子")
-    assert not r.ok and "没丢" in r.text and e.store.get("aki")
+    assert not r.ok and "不用重写" in r.text and e.store.get("aki")
 
 
 def test_narrator_failure_in_act_changes_nothing(make):
@@ -228,3 +228,45 @@ def test_reminder_opens_and_closes_with_the_same_key(make):
     assert (o1, c1, o2, c2) == ("open", "close", "open", "close")
     assert k1 == k1b and k2 == k2b and k1 != k2 and f1 is True and f2 is False
     assert "平江路茶坊" in s1
+
+
+def test_storage_failure_keeps_what_was_written(make, tmp_path):
+    class Flaky(SQLiteStorage):
+        fail = True
+
+        def save(self, record):
+            if Flaky.fail:
+                raise OSError("disk full")
+            return super().save(record)
+    e, _ = make(storage=Flaky(tmp_path / "f.db"))
+    e.start("aki")
+    walk(e, "aki", 4)
+    r = e.finish("aki", TRAVELOGUE, "石子", "捡的")
+    assert not r.ok and "不用重写" in r.text
+    assert e.store.get("aki")["draft"]["travelogue"] == TRAVELOGUE
+    Flaky.fail = False
+    assert e.finish("aki").ok                                  # no need to write it again
+    rec = e.storage.list("aki")[0]
+    assert rec.travelogue.startswith(TRAVELOGUE) and rec.luggage_item == "石子" and rec.luggage_note == "捡的"
+
+
+def test_foreign_session_is_left_alone(make):
+    e, _ = make()
+    e.store.put("aki", {"mode": "fantasy", "universe": "u/x", "history": [], "round": 2})
+    assert not e.start("aki").ok
+    for r in (e.act("aki", "走"), e.finish("aki", TRAVELOGUE, "石子"), e.abandon("aki", confirm=True)):
+        assert not r.ok and "不是这台引擎开的" in r.text
+    assert e.store.get("aki")["mode"] == "fantasy"
+
+
+def test_photo_error_and_interrupted_search_are_reported_as_such(make):
+    class Boom:
+        def find(self, *a, **k):
+            raise RuntimeError("commons down")
+    e, _ = make(photos=Boom())
+    e.start("aki")
+    walk(e, "aki", 4)
+    e.finish("aki", TRAVELOGUE, "石子")
+    assert "出错了" in e.status("aki").text and "commons down" in e.store.get_last("aki")["photo_error"]
+    e.store.put_last("ren", {"drift_id": "x", "short_name": "某地", "photo": "searching", "photo_started": 0})
+    assert "中断" in e.status("ren").text

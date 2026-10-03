@@ -10,6 +10,7 @@ import contextlib
 import fcntl
 import json
 import os
+import uuid
 from pathlib import Path
 from typing import Any, Iterator
 
@@ -45,7 +46,7 @@ class SessionStore:
 
     def _write(self, path: Path, data: dict[str, Any]) -> None:
         self.root.mkdir(parents=True, exist_ok=True)
-        tmp = path.with_suffix(f".{os.getpid()}.tmp")
+        tmp = path.with_suffix(f".{os.getpid()}.{uuid.uuid4().hex[:8]}.tmp")
         tmp.write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
         os.replace(tmp, path)
 

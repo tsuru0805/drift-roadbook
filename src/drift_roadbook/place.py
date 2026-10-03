@@ -15,7 +15,7 @@ import httpx
 
 from .models import Place
 
-UA = {"User-Agent": "pianhang/0.1 (https://github.com/tsuru0805)"}
+UA = {"User-Agent": "drift-roadbook/0.1 (https://github.com/tsuru0805)"}
 _WIKI = "https://en.wikipedia.org"
 _WIKI_ZH = "https://zh.wikipedia.org"
 _TIMEOUT = 5.0

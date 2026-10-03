@@ -1,7 +1,7 @@
 """photo.PhotoFinder — MockTransport, fake narrator; no real network."""
 import httpx
 
-from pianhang.photo import PhotoFinder
+from drift_roadbook.photo import PhotoFinder
 
 JPEG = b"\xff\xd8\xff\xe0fakejpeg"
 

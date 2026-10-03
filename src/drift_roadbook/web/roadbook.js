@@ -1,6 +1,6 @@
 // Roadbook: a map stage + timeline + stop list + detail view for drifts served by the engine's HTTP API.
 // Plain browser script (no modules, no build) so the page also works when opened from file://.
-// Needs land.js (window.PIANHANG_LAND). Data: /api/config + /api/drifts (docs/API.md), or demo/ with ?demo=1 / file://.
+// Needs land.js (window.ROADBOOK_LAND). Data: /api/config + /api/drifts (docs/API.md), or demo/ with ?demo=1 / file://.
 (() => {
 "use strict";
 
@@ -20,7 +20,7 @@ const rootStyle = getComputedStyle(document.documentElement);
 const SANS = rootStyle.getPropertyValue("--sans").trim() || "sans-serif";
 
 // ═══ theme: the one place colours are defined (CSS variables + the canvas read this same object) ═══
-const THEME_KEY = "pianhang.roadbook.theme";
+const THEME_KEY = "drift-roadbook.roadbook.theme";
 const hex2rgb = (h) => { h = h.replace("#", ""); if (h.length === 3) h = h.split("").map((c) => c + c).join(""); const n = parseInt(h, 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
 const rgb2hex = (c) => "#" + c.map((v) => Math.round(clamp(v, 0, 255)).toString(16).padStart(2, "0")).join("");
 const mix = (a, b, t) => { const x = hex2rgb(a), y = hex2rgb(b); return rgb2hex(x.map((v, i) => v + (y[i] - v) * t)); };
@@ -237,8 +237,8 @@ function loadScript(src) {
 /** demo/config.json or demo/drifts.json. file:// pages cannot fetch() local files, so there the generated mirror demo/demo.js is used. */
 async function demoJSON(name) {
   if (location.protocol === "file:") {
-    if (!window.PIANHANG_DEMO) await loadScript("demo/demo.js");
-    const v = window.PIANHANG_DEMO && window.PIANHANG_DEMO[name];
+    if (!window.ROADBOOK_DEMO) await loadScript("demo/demo.js");
+    const v = window.ROADBOOK_DEMO && window.ROADBOOK_DEMO[name];
     if (v == null) throw new Error(`demo/${name} 缺失`);
     return v;
   }
@@ -312,7 +312,7 @@ function recompute() {
 
 // ═══ stage (Canvas 2D) ══════════════════════════════════════════════════
 const cv = $("cv"), ctx = cv.getContext("2d");
-const LAND = new Path2D(window.PIANHANG_LAND || "");
+const LAND = new Path2D(window.ROADBOOK_LAND || "");
 const CAN_FILTER = ctx && "filter" in ctx;
 const S = {
   W: 0, H: 0, dpr: 1,
@@ -912,7 +912,7 @@ async function boot() {
   applyTheme(loadTheme(), false);
   sizeStage();
   S.cam = { x: 142, y: 60, z: Math.max(Z_MIN, (S.W || 360) / 290) }; S.camT = Object.assign({}, S.cam);
-  if (!window.PIANHANG_LAND) errs.set("底图", "底图没载入(land.js)");
+  if (!window.ROADBOOK_LAND) errs.set("底图", "底图没载入(land.js)");
   startLoop();
   recompute(); renderAll();
   try {

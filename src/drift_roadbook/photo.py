@@ -145,7 +145,7 @@ class PhotoFinder:
         if self.narrator is None or not getattr(self.narrator, "can_see_images", False):
             # nobody can look at it, so nobody can vouch for it: a wrong photo is worse than none
             return None
-        with tempfile.TemporaryDirectory(prefix="pianhang-photo-") as d:
+        with tempfile.TemporaryDirectory(prefix="drift-roadbook-photo-") as d:
             paths, index = [], []
             for i, c in enumerate(cands):
                 n = len(paths)   # files are named by their position in the list the model sees

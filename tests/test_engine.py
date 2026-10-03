@@ -2,13 +2,13 @@ import json
 
 import pytest
 
-from pianhang.engine import DriftEngine
-from pianhang.models import Place
-from pianhang.narrators import NarratorError
-from pianhang.narrators.claude_cli import ClaudeCLINarrator
-from pianhang.photo import Photo
-from pianhang.session_store import SessionStore
-from pianhang.storage_sqlite import SQLiteStorage
+from drift_roadbook.engine import DriftEngine
+from drift_roadbook.models import Place
+from drift_roadbook.narrators import NarratorError
+from drift_roadbook.narrators.claude_cli import ClaudeCLINarrator
+from drift_roadbook.photo import Photo
+from drift_roadbook.session_store import SessionStore
+from drift_roadbook.storage_sqlite import SQLiteStorage
 
 DEST = {"destination": "苏州平江路的运河茶坊", "short_name": "平江路茶坊", "country": "中国", "city": "苏州",
         "place_en": "Pingjiang Road", "lat": 31.318, "lon": 120.632, "kind": "运河边茶馆",
@@ -185,7 +185,7 @@ def test_city_fallback_refined_by_nearby_estimate_and_no_photo_reported(make):
 
 
 def test_host_mode_without_narrator(make, monkeypatch):
-    monkeypatch.setattr("pianhang.sources.material", lambda place, **k: ("资料", "Pingjiang Road"))
+    monkeypatch.setattr("drift_roadbook.sources.material", lambda place, **k: ("资料", "Pingjiang Road"))
     e, _ = make(narrator=None)
     assert not e.start("aki").ok                             # must name a destination itself
     assert e.start("aki", destination="平江路").ok

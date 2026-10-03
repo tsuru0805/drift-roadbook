@@ -429,7 +429,7 @@ class DriftEngine:
                 self.on_photo(traveler, outcome, place)
 
         if self.photo_async:
-            threading.Thread(target=work, name="pianhang-photo", daemon=True).start()
+            threading.Thread(target=work, name="drift-roadbook-photo", daemon=True).start()
         else:
             work()
 

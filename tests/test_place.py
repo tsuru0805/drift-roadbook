@@ -4,7 +4,7 @@ import time
 import httpx
 import pytest
 
-from pianhang import place as pl
+from drift_roadbook import place as pl
 
 
 def _client(handler):

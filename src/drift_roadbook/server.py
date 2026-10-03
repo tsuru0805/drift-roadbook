@@ -1,7 +1,7 @@
 """Run the drift engine as an MCP server (stdio or HTTP) plus a small read API and the web roadbook.
 
-    pianhang stdio            # for a local Claude Code / Claude Desktop
-    pianhang serve            # HTTP: /mcp (MCP), /api/* (read API), / (web roadbook)
+    drift-roadbook stdio            # for a local Claude Code / Claude Desktop
+    drift-roadbook serve            # HTTP: /mcp (MCP), /api/* (read API), / (web roadbook)
 
 Configuration is environment variables — see README for the full list.
 """
@@ -29,7 +29,7 @@ WEB_DIR = Path(__file__).parent / "web"
 # ── configuration ──────────────────────────────────────────────────────────
 
 def _travelers() -> dict[str, str]:
-    raw = os.getenv("PIANHANG_TRAVELERS", "").strip()
+    raw = os.getenv("ROADBOOK_TRAVELERS", "").strip()
     out: dict[str, str] = {}
     for item in raw.split(","):
         if not item.strip():
@@ -40,7 +40,7 @@ def _travelers() -> dict[str, str]:
 
 
 def _home() -> dict:
-    raw = os.getenv("PIANHANG_HOME", "").strip()
+    raw = os.getenv("ROADBOOK_HOME", "").strip()
     if not raw:
         return {"lat": 0.0, "lon": 0.0, "label": "home"}
     lat, lon, *label = [x.strip() for x in raw.split(",")]
@@ -48,43 +48,43 @@ def _home() -> dict:
 
 
 def _narrator(data_dir: Path):
-    kind = os.getenv("PIANHANG_NARRATOR", "").strip().lower()
-    model = os.getenv("PIANHANG_MODEL", "claude-sonnet-5-5")
-    claude_bin = os.getenv("PIANHANG_CLAUDE_BIN") or shutil.which("claude")
+    kind = os.getenv("ROADBOOK_NARRATOR", "").strip().lower()
+    model = os.getenv("ROADBOOK_MODEL", "claude-sonnet-5-5")
+    claude_bin = os.getenv("ROADBOOK_CLAUDE_BIN") or shutil.which("claude")
     if not kind:
         kind = "claude-cli" if claude_bin else ("anthropic" if os.getenv("ANTHROPIC_API_KEY") else "none")
     if kind == "claude-cli":
         if not claude_bin:
-            sys.exit("PIANHANG_NARRATOR=claude-cli but no `claude` command found (install Claude Code).")
+            sys.exit("ROADBOOK_NARRATOR=claude-cli but no `claude` command found (install Claude Code).")
         return ClaudeCLINarrator(workdir=data_dir / "cli", model=model, binary=claude_bin,
                                  oauth_token=os.getenv("CLAUDE_CODE_OAUTH_TOKEN") or None)
     if kind == "anthropic":
         key = os.getenv("ANTHROPIC_API_KEY")
         if not key:
-            sys.exit("PIANHANG_NARRATOR=anthropic needs ANTHROPIC_API_KEY.")
+            sys.exit("ROADBOOK_NARRATOR=anthropic needs ANTHROPIC_API_KEY.")
         return AnthropicNarrator(api_key=key, model=model, base_url=os.getenv("ANTHROPIC_BASE_URL") or None)
     if kind == "none":
         return None
-    sys.exit(f"PIANHANG_NARRATOR must be claude-cli / anthropic / none, got {kind!r}")
+    sys.exit(f"ROADBOOK_NARRATOR must be claude-cli / anthropic / none, got {kind!r}")
 
 
 def build_engine() -> DriftEngine:
-    data_dir = Path(os.getenv("PIANHANG_DATA_DIR", "./pianhang-data")).expanduser()
+    data_dir = Path(os.getenv("ROADBOOK_DATA_DIR", "./drift-roadbook-data")).expanduser()
     data_dir.mkdir(parents=True, exist_ok=True)
     return DriftEngine(
         storage=SQLiteStorage(data_dir / "drifts.db"), store=SessionStore(data_dir / "state"),
         narrator=_narrator(data_dir), travelers=_travelers(),
-        temperature=JournalTemperature(os.getenv("PIANHANG_JOURNAL_DIR") or None,
-                                       per_traveler=os.getenv("PIANHANG_JOURNAL_SHARED", "") != "1"),
-        min_rounds=int(os.getenv("PIANHANG_MIN_ROUNDS", "4")),
-        max_rounds=int(os.getenv("PIANHANG_MAX_ROUNDS", "10")),
-        tz=os.getenv("PIANHANG_TZ", "Asia/Shanghai"))
+        temperature=JournalTemperature(os.getenv("ROADBOOK_JOURNAL_DIR") or None,
+                                       per_traveler=os.getenv("ROADBOOK_JOURNAL_SHARED", "") != "1"),
+        min_rounds=int(os.getenv("ROADBOOK_MIN_ROUNDS", "4")),
+        max_rounds=int(os.getenv("ROADBOOK_MAX_ROUNDS", "10")),
+        tz=os.getenv("ROADBOOK_TZ", "Asia/Shanghai"))
 
 
 # ── MCP tools ──────────────────────────────────────────────────────────────
 
 def build_mcp(engine: DriftEngine, **kw) -> FastMCP:
-    mcp = FastMCP(name="pianhang", instructions=(
+    mcp = FastMCP(name="drift-roadbook", instructions=(
         "偏航：独自去世界上某个真实的角落走一走，回来时带一篇自己写的游记和一样东西。"
         "start_drift 出发 → drift_act 一步步走 → finish_drift 收尾。"), **kw)
 
@@ -158,7 +158,7 @@ def build_http_app(engine: DriftEngine, token: str | None):
         return JSONResponse({"error": msg}, status_code=status)
 
     async def config(request):
-        return JSONResponse({"title": os.getenv("PIANHANG_TITLE", "偏航"), "home": _home(),
+        return JSONResponse({"title": os.getenv("ROADBOOK_TITLE", "偏航"), "home": _home(),
                              "travelers": [{"id": k, "name": v} for k, v in engine.travelers.items()]})
 
     async def drifts(request):
@@ -185,7 +185,7 @@ def build_http_app(engine: DriftEngine, token: str | None):
                 # arrives under another host name (a tunnel, a forwarded port, DNS rebinding)
                 host = (request.headers.get("host") or "").rsplit(":", 1)[0].lower()
                 if host not in loopback_hosts:
-                    return err(403, "no PIANHANG_TOKEN set: only reachable as localhost")
+                    return err(403, "no ROADBOOK_TOKEN set: only reachable as localhost")
             if token and (path.startswith("/api/") or path.startswith("/mcp")):
                 given = request.query_params.get("key") or ""
                 h = request.headers.get("authorization", "")
@@ -206,20 +206,20 @@ def build_http_app(engine: DriftEngine, token: str | None):
 
 
 def main(argv: list[str] | None = None) -> None:
-    ap = argparse.ArgumentParser(prog="pianhang")
+    ap = argparse.ArgumentParser(prog="drift-roadbook")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("stdio", help="MCP over stdio (local Claude Code / Desktop)")
     sp = sub.add_parser("serve", help="HTTP: MCP at /mcp, read API at /api, web roadbook at /")
-    sp.add_argument("--host", default=os.getenv("PIANHANG_HOST", "127.0.0.1"))
-    sp.add_argument("--port", type=int, default=int(os.getenv("PIANHANG_PORT", "8790")))
+    sp.add_argument("--host", default=os.getenv("ROADBOOK_HOST", "127.0.0.1"))
+    sp.add_argument("--port", type=int, default=int(os.getenv("ROADBOOK_PORT", "8790")))
     args = ap.parse_args(argv)
     engine = build_engine()
     if args.cmd == "stdio":
         build_mcp(engine).run("stdio")
         return
-    token = os.getenv("PIANHANG_TOKEN", "").strip() or None
+    token = os.getenv("ROADBOOK_TOKEN", "").strip() or None
     if not token and args.host not in ("127.0.0.1", "localhost", "::1"):
-        sys.exit("Refusing to listen on a non-loopback address without PIANHANG_TOKEN.")
+        sys.exit("Refusing to listen on a non-loopback address without ROADBOOK_TOKEN.")
     import uvicorn
     # no access log: the key may ride in the query string (?key=) and must not land in log files
     uvicorn.run(build_http_app(engine, token), host=args.host, port=args.port, access_log=False)

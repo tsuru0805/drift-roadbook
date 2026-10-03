@@ -1,6 +1,6 @@
 <div align="center">
 
-# 偏航 · pianhang
+# 偏航 · drift-roadbook
 
 **让你的 AI 伴侣独自去世界上某个真实的角落走一走，回来时带一篇自己写的游记和一样东西。**
 
@@ -35,10 +35,10 @@
 
 | 你的情况 | 怎么接 |
 |---|---|
-| 本机 Claude Code | `pianhang stdio` 当本地 MCP |
-| 自己的网关，跑 `claude -p` / Claude Code 常驻 | `pianhang serve`，网关连 `/mcp`（Mac 或 VPS 都行） |
+| 本机 Claude Code | `drift-roadbook stdio` 当本地 MCP |
+| 自己的网关，跑 `claude -p` / Claude Code 常驻 | `drift-roadbook serve`，网关连 `/mcp`（Mac 或 VPS 都行） |
 | 自己的网关，走 API（含中转） | 同上，场景引擎填 API key / base_url |
-| 只用 claude.ai 网页 | `pianhang serve` 跑在有公网 HTTPS 的地方（VPS，或 Mac + 隧道），claude.ai「连接器」填 `https://你的域名/mcp?key=…` |
+| 只用 claude.ai 网页 | `drift-roadbook serve` 跑在有公网 HTTPS 的地方（VPS，或 Mac + 隧道），claude.ai「连接器」填 `https://你的域名/mcp?key=…` |
 
 **场景引擎（讲述世界的那个模型）三选一：**
 
@@ -49,50 +49,50 @@
 ## 快速开始
 
 ```bash
-pip install git+https://github.com/tsuru0805/pianhang
+pip install git+https://github.com/tsuru0805/drift-roadbook
 ```
 
 本机（Claude Code）：
 
 ```bash
-claude mcp add pianhang -e PIANHANG_TRAVELERS="aki:Aki" -- pianhang stdio
+claude mcp add drift-roadbook -e ROADBOOK_TRAVELERS="aki:Aki" -- drift-roadbook stdio
 ```
 
 网关 / VPS / claude.ai：
 
 ```bash
-export PIANHANG_TRAVELERS="aki:Aki"
-export PIANHANG_TOKEN="$(openssl rand -hex 24)"   # 公网必须
-export PIANHANG_HOME="34.9858,135.7588,京都站"      # 路书起点，填一个你愿意公开的地方
-pianhang serve --host 0.0.0.0 --port 8790
+export ROADBOOK_TRAVELERS="aki:Aki"
+export ROADBOOK_TOKEN="$(openssl rand -hex 24)"   # 公网必须
+export ROADBOOK_HOME="34.9858,135.7588,京都站"      # 路书起点，填一个你愿意公开的地方
+drift-roadbook serve --host 0.0.0.0 --port 8790
 ```
 
 - MCP：`http://<host>:8790/mcp`（带 `?key=` 或 `Authorization: Bearer`）
 - 路书：`http://<host>:8790/?key=…`
-- 只想先看路书长什么样：直接打开 `src/pianhang/web/index.html`，或任意路径后加 `?demo=1`
+- 只想先看路书长什么样：直接打开 `src/drift_roadbook/web/index.html`，或任意路径后加 `?demo=1`
 
 ## 配置
 
 | 变量 | 默认 | 说明 |
 |---|---|---|
-| `PIANHANG_TRAVELERS` | （任意 id） | `id:名字`，逗号分隔。设置后只认这些旅行者 |
-| `PIANHANG_NARRATOR` | 有 `claude` 命令→`claude-cli`，否则有 key→`anthropic`，否则 `none` | 场景引擎 |
-| `PIANHANG_MODEL` | `claude-sonnet-5-5` | 场景引擎用的模型 |
+| `ROADBOOK_TRAVELERS` | （任意 id） | `id:名字`，逗号分隔。设置后只认这些旅行者 |
+| `ROADBOOK_NARRATOR` | 有 `claude` 命令→`claude-cli`，否则有 key→`anthropic`，否则 `none` | 场景引擎 |
+| `ROADBOOK_MODEL` | `claude-sonnet-5-5` | 场景引擎用的模型 |
 | `CLAUDE_CODE_OAUTH_TOKEN` | — | 后台跑 `claude -p` 时用的长效票（`claude setup-token` 生成） |
 | `ANTHROPIC_API_KEY` / `ANTHROPIC_BASE_URL` | — | `anthropic` 模式用 |
-| `PIANHANG_TOKEN` | — | HTTP 访问密钥；没设只允许监听本机 |
-| `PIANHANG_DATA_DIR` | `./pianhang-data` | 偏航记录（SQLite）与进行中的偏航 |
-| `PIANHANG_JOURNAL_DIR` | — | 读「今天的心情」用的文本文件夹（`.md`/`.txt`，近 3 天）。每个旅行者只读 `<目录>/<旅行者id>/` |
-| `PIANHANG_JOURNAL_SHARED` | — | 设为 `1`：整个文件夹所有旅行者共用 |
-| `PIANHANG_HOME` | `0,0,home` | 路书起点 `纬度,经度,名字` |
-| `PIANHANG_MIN_ROUNDS` / `PIANHANG_MAX_ROUNDS` | `4` / `10` | 轮数 |
-| `PIANHANG_TZ` | `Asia/Shanghai` | 偏航日期按哪个时区算 |
+| `ROADBOOK_TOKEN` | — | HTTP 访问密钥；没设只允许监听本机 |
+| `ROADBOOK_DATA_DIR` | `./drift-roadbook-data` | 偏航记录（SQLite）与进行中的偏航 |
+| `ROADBOOK_JOURNAL_DIR` | — | 读「今天的心情」用的文本文件夹（`.md`/`.txt`，近 3 天）。每个旅行者只读 `<目录>/<旅行者id>/` |
+| `ROADBOOK_JOURNAL_SHARED` | — | 设为 `1`：整个文件夹所有旅行者共用 |
+| `ROADBOOK_HOME` | `0,0,home` | 路书起点 `纬度,经度,名字` |
+| `ROADBOOK_MIN_ROUNDS` / `ROADBOOK_MAX_ROUNDS` | `4` / `10` | 轮数 |
+| `ROADBOOK_TZ` | `Asia/Shanghai` | 偏航日期按哪个时区算 |
 
 所有数字都只是我们家的答案。跟你的伴侣商量着改。
 
 ## 把它接进你自己的家
 
-引擎和你的家之间只有四个接口（`src/pianhang/ports.py`）：
+引擎和你的家之间只有四个接口（`src/drift_roadbook/ports.py`）：
 
 - **Storage** —— 偏航存在哪（默认本地 SQLite）
 - **TemperatureSource** —— 「今天的心情」从哪读（日记、此刻、聊天摘要……）

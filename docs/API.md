@@ -5,7 +5,7 @@ MCP tools are documented in [PROTOCOL.md](PROTOCOL.md).
 
 ## Auth
 
-If `PIANHANG_TOKEN` is set, every `/api/*` request must carry it, either as
+If `ROADBOOK_TOKEN` is set, every `/api/*` request must carry it, either as
 `Authorization: Bearer <token>` or as `?key=<token>`. The web roadbook reads `?key=` from its own
 URL and forwards it. Without a token configured, the API only listens on loopback.
 

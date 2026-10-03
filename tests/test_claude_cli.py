@@ -3,8 +3,8 @@ import subprocess
 
 import pytest
 
-from pianhang.narrators import NarratorError
-from pianhang.narrators.claude_cli import ClaudeCLINarrator
+from drift_roadbook.narrators import NarratorError
+from drift_roadbook.narrators.claude_cli import ClaudeCLINarrator
 
 
 def test_prompt_goes_in_on_stdin_never_as_an_argument(monkeypatch, tmp_path):

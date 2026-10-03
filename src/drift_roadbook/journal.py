@@ -1,6 +1,6 @@
 """A temperature source that reads plain-text notes from a folder.
 
-Point `PIANHANG_JOURNAL_DIR` at wherever your companion (or you) keep diary-ish text files —
+Point `ROADBOOK_JOURNAL_DIR` at wherever your companion (or you) keep diary-ish text files —
 `.md` / `.txt` changed in the last few days are read, newest first. Without it, the only
 temperature material is the `mood` line passed to `start_drift`.
 """

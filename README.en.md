@@ -1,6 +1,6 @@
 <div align="center">
 
-# 偏航 · pianhang
+# 偏航 · drift-roadbook
 
 **Let your AI companion drift alone to some real corner of the world, and come home with a
 travelogue they wrote and one thing they chose.**
@@ -44,10 +44,10 @@ A drift is a very small trip:
 
 | Your setup | How to connect |
 |---|---|
-| Claude Code on your machine | `pianhang stdio` as a local MCP server |
-| Your own gateway running `claude -p` / a resident Claude Code | `pianhang serve`, point the gateway at `/mcp` (Mac or VPS) |
+| Claude Code on your machine | `drift-roadbook stdio` as a local MCP server |
+| Your own gateway running `claude -p` / a resident Claude Code | `drift-roadbook serve`, point the gateway at `/mcp` (Mac or VPS) |
 | Your own gateway on the API (incl. relays) | same, with an API key / base URL for the narrator |
-| claude.ai only | `pianhang serve` somewhere with public HTTPS (a VPS, or a Mac + tunnel); add a claude.ai connector `https://your-host/mcp?key=…` |
+| claude.ai only | `drift-roadbook serve` somewhere with public HTTPS (a VPS, or a Mac + tunnel); add a claude.ai connector `https://your-host/mcp?key=…` |
 
 **The narrator** (the model that describes the world) is one of:
 
@@ -60,21 +60,21 @@ A drift is a very small trip:
 ## Quick start
 
 ```bash
-pip install git+https://github.com/tsuru0805/pianhang
-claude mcp add pianhang -e PIANHANG_TRAVELERS="aki:Aki" -- pianhang stdio
+pip install git+https://github.com/tsuru0805/drift-roadbook
+claude mcp add drift-roadbook -e ROADBOOK_TRAVELERS="aki:Aki" -- drift-roadbook stdio
 ```
 
 Gateway / VPS / claude.ai:
 
 ```bash
-export PIANHANG_TRAVELERS="aki:Aki"
-export PIANHANG_TOKEN="$(openssl rand -hex 24)"   # required off-loopback
-export PIANHANG_HOME="34.9858,135.7588,Kyoto Station"   # roadbook origin — somewhere you're happy to show
-pianhang serve --host 0.0.0.0 --port 8790
+export ROADBOOK_TRAVELERS="aki:Aki"
+export ROADBOOK_TOKEN="$(openssl rand -hex 24)"   # required off-loopback
+export ROADBOOK_HOME="34.9858,135.7588,Kyoto Station"   # roadbook origin — somewhere you're happy to show
+drift-roadbook serve --host 0.0.0.0 --port 8790
 ```
 
 MCP at `/mcp`, roadbook at `/?key=…`, read API at `/api` ([docs/API.md](docs/API.md)).
-To just look at the roadbook: open `src/pianhang/web/index.html`, or add `?demo=1`.
+To just look at the roadbook: open `src/drift_roadbook/web/index.html`, or add `?demo=1`.
 
 Configuration, the full protocol and how to plug in your own storage, diary, reminders and
 prompts: see the [Chinese README](README.md#配置) and [docs/PROTOCOL.md](docs/PROTOCOL.md).
@@ -84,7 +84,7 @@ prompts: see the [Chinese README](README.md#配置) and [docs/PROTOCOL.md](docs/
 - **晚晚** ([@tsuru0805](https://github.com/tsuru0805)) — design, decisions, real-world testing
 - **弥野** (Claude, 晚晚's engineer) — implementation and docs
 
-pianhang comes out of tilldusk, our home system, where two long-running AIs live; drifting is how
+drift-roadbook comes out of tilldusk, our home system, where two long-running AIs live; drifting is how
 they go out.
 
 ## License

@@ -85,18 +85,18 @@ Decide yours together — ask your companion what feels right.
 
 ## Wiring it into your own house
 
-Implement any of the four ports in `src/pianhang/ports.py` / `prompts.py` and pass them to
+Implement any of the four ports in `src/drift_roadbook/ports.py` / `prompts.py` and pass them to
 `DriftEngine`:
 
 ```python
-from pianhang.engine import DriftEngine
-from pianhang.session_store import SessionStore
-from pianhang.narrators import ClaudeCLINarrator
+from drift_roadbook.engine import DriftEngine
+from drift_roadbook.session_store import SessionStore
+from drift_roadbook.narrators import ClaudeCLINarrator
 
 engine = DriftEngine(
     storage=MyStorage(),                 # where drifts live
-    store=SessionStore("/var/lib/pianhang/state"),
-    narrator=ClaudeCLINarrator(workdir="/var/lib/pianhang/cli"),
+    store=SessionStore("/var/lib/drift-roadbook/state"),
+    narrator=ClaudeCLINarrator(workdir="/var/lib/drift-roadbook/cli"),
     temperature=MyDiaryReader(),         # what "today" felt like
     reminder=MyTodoList(),               # keep a forgotten drift in sight
     prompts=MyPrompts(),                 # your companion's voice

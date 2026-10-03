@@ -3,11 +3,11 @@ import asyncio
 import pytest
 from starlette.testclient import TestClient
 
-from pianhang import server
-from pianhang.engine import DriftEngine
-from pianhang.models import DriftRecord, Place, Temperature
-from pianhang.session_store import SessionStore
-from pianhang.storage_sqlite import SQLiteStorage
+from drift_roadbook import server
+from drift_roadbook.engine import DriftEngine
+from drift_roadbook.models import DriftRecord, Place, Temperature
+from drift_roadbook.session_store import SessionStore
+from drift_roadbook.storage_sqlite import SQLiteStorage
 
 
 @pytest.fixture
@@ -21,7 +21,7 @@ def eng(tmp_path):
 
 
 def test_read_api_and_web(eng, monkeypatch):
-    monkeypatch.setenv("PIANHANG_HOME", "34.9858,135.7588,京都站")
+    monkeypatch.setenv("ROADBOOK_HOME", "34.9858,135.7588,京都站")
     c = TestClient(server.build_http_app(eng, None), base_url="http://localhost")
     cfg = c.get("/api/config").json()
     assert cfg["home"] == {"lat": 34.9858, "lon": 135.7588, "label": "京都站"} and cfg["travelers"] == [{"id": "aki", "name": "Aki"}]
@@ -50,9 +50,9 @@ def test_mcp_tools_listed(eng):
 
 
 def test_refuses_public_bind_without_key(monkeypatch, tmp_path):
-    monkeypatch.setenv("PIANHANG_DATA_DIR", str(tmp_path))
-    monkeypatch.setenv("PIANHANG_NARRATOR", "none")
-    monkeypatch.delenv("PIANHANG_TOKEN", raising=False)
+    monkeypatch.setenv("ROADBOOK_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("ROADBOOK_NARRATOR", "none")
+    monkeypatch.delenv("ROADBOOK_TOKEN", raising=False)
     with pytest.raises(SystemExit):
         server.main(["serve", "--host", "0.0.0.0"])
 
@@ -64,7 +64,7 @@ def test_without_key_api_only_answers_as_localhost(eng):
 
 
 def test_journal_reads_only_the_travelers_own_folder(tmp_path):
-    from pianhang.journal import JournalTemperature
+    from drift_roadbook.journal import JournalTemperature
     (tmp_path / "aki").mkdir()
     (tmp_path / "aki" / "d.md").write_text("aki 的日记", encoding="utf-8")
     (tmp_path / "shared.md").write_text("公共笔记", encoding="utf-8")

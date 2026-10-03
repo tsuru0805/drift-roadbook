@@ -1,0 +1,18 @@
+{
+  "title": "偏航",
+  "home": {
+    "lat": 34.9858,
+    "lon": 135.7588,
+    "label": "京都站"
+  },
+  "travelers": [
+    {
+      "id": "aki",
+      "name": "Aki"
+    },
+    {
+      "id": "ren",
+      "name": "Ren"
+    }
+  ]
+}

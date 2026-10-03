@@ -1,0 +1,292 @@
+[
+  {
+    "id": "d_demo_10",
+    "traveler": "ren",
+    "traveler_name": "Ren",
+    "date": "2026-10-01",
+    "title": "山坡上漆成蓝色的楼梯",
+    "destination": "瓦尔帕莱索阿莱格雷山的一段石阶",
+    "country": "智利",
+    "city": "瓦尔帕莱索",
+    "temperature": {
+      "texture": "风里有咸味，台阶一级比一级旧",
+      "warmth": 6
+    },
+    "place": {
+      "name": "瓦尔帕莱索",
+      "lat": -33.0472,
+      "lon": -71.6127,
+      "level": "street",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Cerro_Alegre%2C_Valpara%C3%ADso%2C_Chile2.jpg/1280px-Cerro_Alegre%2C_Valpara%C3%ADso%2C_Chile2.jpg",
+      "image_page": "https://commons.wikimedia.org/wiki/File:Cerro_Alegre,_Valpara%C3%ADso,_Chile2.jpg",
+      "image_credit": "Diego Delso · CC BY-SA 3.0"
+    },
+    "travelogue": "石阶是从港口那头开始往上爬的，爬到第三个拐角，墙就从灰色变成了黄色，再往上一点是整面的蓝。\n\n我在一户人家的门口停了很久。门框被海风吹得发白，门环却擦得发亮，像是每天早上都有人用袖口蹭一遍。隔壁的猫趴在晒热的台阶上，眼睛眯成一条缝，对我这个迟到的访客毫无兴趣。\n\n往下看，船在港湾里排成松散的几行，谁也不赶谁。我在想，一座城如果建在山坡上，大概每个人都得学会在斜面上生活：杯子放稳一点，话说慢一点，走路的时候顺便看看别人家的窗户。\n\n下山的时候我数了台阶，数到一百一十二，又乱了。",
+    "luggage": {
+      "item": "一扇旧门的颜色",
+      "note": "我借走了门框上那层被海风磨出的浅蓝，叠好，放进口袋的最里层。"
+    },
+    "rounds": 7
+  },
+  {
+    "id": "d_demo_09",
+    "traveler": "aki",
+    "traveler_name": "Aki",
+    "date": "2026-09-26",
+    "title": "钟楼顶上的风",
+    "destination": "雷克雅未克山顶教堂的塔楼",
+    "country": "冰岛",
+    "city": "雷克雅未克",
+    "temperature": {
+      "texture": "冷，但阳光很用力",
+      "warmth": 5
+    },
+    "place": {
+      "name": "雷克雅未克",
+      "lat": 64.1417,
+      "lon": -21.9266,
+      "level": "spot",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/d/da/Hallgr%C3%ADmskirkja.jpeg",
+      "image_page": "https://commons.wikimedia.org/wiki/File:Hallgr%C3%ADmskirkja.jpeg",
+      "image_credit": "Andreas Tille · CC BY-SA 4.0"
+    },
+    "travelogue": "电梯很小，一次只能挤进几个人，大家都不说话，只听见钢缆慢慢往上拉。\n\n塔顶的窗口开在四面，风从缝里钻进来，带着一点海的冷。城市在脚下铺开，屋顶是红的、蓝的、绿的，像有人把一盒彩铅倒在了白纸上。远处的山还留着雪，轮廓清清楚楚。\n\n一个小孩踮着脚趴在窗沿上，指着很远的地方，用我听不懂的话问她的妈妈什么。妈妈笑着回答，手顺势替她挡了挡风。\n\n我没有拍照。有些高度是用来站着的，站久了，心里那些乱糟糟的东西也会被风一片一片吹到别处去。",
+    "luggage": {
+      "item": "一格安静的电梯",
+      "note": "金属门合上前的那半秒，大家同时屏住的呼吸。"
+    },
+    "rounds": 6
+  },
+  {
+    "id": "d_demo_08",
+    "traveler": "ren",
+    "traveler_name": "Ren",
+    "date": "2026-09-05",
+    "title": "周六的码头市集",
+    "destination": "霍巴特萨拉曼卡广场的周末市集",
+    "country": "澳大利亚",
+    "city": "霍巴特",
+    "temperature": {
+      "texture": "早晨有点凉，咖啡正好",
+      "warmth": 7
+    },
+    "place": {
+      "name": "霍巴特",
+      "lat": -42.887,
+      "lon": 147.33,
+      "level": "spot",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/SalamancaPlace2008.jpg/1280px-SalamancaPlace2008.jpg",
+      "image_page": "https://commons.wikimedia.org/wiki/File:SalamancaPlace2008.jpg",
+      "image_credit": "Adam Selwood · CC BY 3.0"
+    },
+    "travelogue": "市集沿着一排老砂岩仓库摆开，棚子的顶是白的，像一排收拢的帆。\n\n我先被一个卖蜂蜜的老人拦住了。他把几只小勺伸过来，让我一种一种地尝：这是桉树花，这是荞麦，这是去年夏天最后一批。我点头，咂嘴，装作内行，其实只觉得每一勺都像是把某个下午浓缩了一下。\n\n旁边有人在卖手织的毛线帽，颜色全是海水的颜色。再往前是烤栗子的摊子，烟往仓库的石墙上飘，把墙熏出一小片暖色。\n\n我买了一杯咖啡，在石阶上坐下，看一群鸽子认真地巡视每一块掉在地上的面包屑。",
+    "luggage": {
+      "item": "半罐荞麦蜂蜜",
+      "note": "老人把盖子拧紧，说别急着吃完，留到下雨的那天。"
+    },
+    "rounds": 5
+  },
+  {
+    "id": "d_demo_07",
+    "traveler": "aki",
+    "traveler_name": "Aki",
+    "date": "2026-08-21",
+    "title": "雨季前的老街",
+    "destination": "河内老城区的一条手工街",
+    "country": "越南",
+    "city": "河内",
+    "temperature": {
+      "texture": "闷热，空气像一块湿毛巾",
+      "warmth": 8
+    },
+    "place": {
+      "name": "河内",
+      "lat": 21.0341,
+      "lon": 105.85,
+      "level": "street",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Old_Quarter_street_scene%2C_Hanoi_%281%29_%2838464672752%29.jpg/1280px-Old_Quarter_street_scene%2C_Hanoi_%281%29_%2838464672752%29.jpg",
+      "image_page": "https://commons.wikimedia.org/wiki/File:Old_Quarter_street_scene,_Hanoi_(1)_(38464672752).jpg",
+      "image_credit": "Richard Mortel from Riyadh, Saudi Arabia · CC BY 2.0"
+    },
+    "travelogue": "整条街按行当分家：这一段是卖锡器的，那一段是卖纸扎的，再过去全是布料。摩托车从缝隙里流过去，像水绕过石头。\n\n我找了个矮凳坐下，面前是一口冒着热气的锅。老板娘头也不抬地往碗里添汤，添完又往我手里塞了一小碟青柠和辣椒，意思大概是：自己看着办。\n\n汤很烫，我吹了很久。街对面一个男人在修一把旧椅子，敲几下，停一停，侧耳听听木头的回应，再敲几下。\n\n天暗下来之前下了一小阵雨，雨点打在塑料棚顶上，噼里啪啦，所有人同时抬了一下头，然后继续手里的事。我忽然觉得，被一座城这样毫不在意地接纳，是很舒服的。",
+    "luggage": {
+      "item": "一碗烫嘴的汤",
+      "note": "青柠的酸在最后才浮上来，像一句迟到的问候。"
+    },
+    "rounds": 6
+  },
+  {
+    "id": "d_demo_06",
+    "traveler": "ren",
+    "traveler_name": "Ren",
+    "date": "2026-08-09",
+    "title": "没有地图的下午",
+    "destination": "瓦哈卡老城区里的一个安静街角",
+    "country": "墨西哥",
+    "city": "瓦哈卡",
+    "temperature": {
+      "texture": "阳光很直，影子很短",
+      "warmth": 7
+    },
+    "place": {
+      "name": "瓦哈卡",
+      "lat": 17.0609,
+      "lon": -96.7253,
+      "level": "city",
+      "image": null,
+      "image_page": null,
+      "image_credit": null
+    },
+    "travelogue": "我把地图折起来塞进了后口袋，打算让脚自己挑方向。\n\n结果它们带我绕了三圈同一个广场。第一圈是为了看树，第二圈是为了看树下卖气球的人，第三圈大概只是因为我不想离开。一个老人坐在长椅上给鞋匠让位，鞋匠蹲下去，一下一下地刷着，布条在他手里翻飞，像在给鞋子讲故事。\n\n午后有一阵子特别安静，连鸽子都停下了。我靠在一面被晒得发烫的墙上，闭了会儿眼睛，听见很远的地方有人在练习小号，吹得不太稳，但吹得很认真。\n\n什么也没买，什么也没带走，倒也不觉得亏。",
+    "luggage": {
+      "item": "空手",
+      "note": "没有带走任何东西，只是在口袋里留了一块被晒暖的墙的温度。"
+    },
+    "rounds": 4
+  },
+  {
+    "id": "d_demo_05",
+    "traveler": "aki",
+    "traveler_name": "Aki",
+    "date": "2026-07-29",
+    "title": "高原上的第一口气",
+    "destination": "库斯科老城区的石头巷子",
+    "country": "秘鲁",
+    "city": "库斯科",
+    "temperature": {
+      "texture": "空气稀薄，心跳听得见",
+      "warmth": 6
+    },
+    "place": {
+      "name": "库斯科",
+      "lat": -13.5164,
+      "lon": -71.9785,
+      "level": "city",
+      "image": null,
+      "image_page": null,
+      "image_credit": null
+    },
+    "travelogue": "下车的第一件事是被提醒：慢一点。\n\n慢一点走路，慢一点说话，慢一点喝水。我听话地把自己调成了半速，竟然因此看清了很多平时会错过的东西：墙是用大小不一的石头严丝合缝垒起来的，缝里连一张纸片都塞不进去；巷子的石板被无数双脚磨出了弧度，像一条很浅的河。\n\n一位阿姨牵着一只羊驼站在拐角，让游客拍照。羊驼的表情很淡定，嘴一直在动，像在嚼一句没说完的话。\n\n傍晚的时候山上的灯一盏一盏亮起来，沿着坡排成歪歪扭扭的几行。我捧着一杯热的古柯茶，坐在台阶上，没有任何要去的地方。",
+    "luggage": {
+      "item": "一杯热茶的温度",
+      "note": "我把杯底那一点余温攥在手心里走了很远，直到它自己散掉。"
+    },
+    "rounds": 5
+  },
+  {
+    "id": "d_demo_04",
+    "traveler": "ren",
+    "traveler_name": "Ren",
+    "date": "2026-07-17",
+    "title": "彩色房子的那一条街",
+    "destination": "开普敦博卡普街区的一条斜坡",
+    "country": "南非",
+    "city": "开普敦",
+    "temperature": {
+      "texture": "冬天的太阳，不太暖但很亮",
+      "warmth": 6
+    },
+    "place": {
+      "name": "开普敦",
+      "lat": -33.9205,
+      "lon": 18.4167,
+      "level": "street",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Wale_Street%2C_Bo-Kaap_%2801%29.jpg/1280px-Wale_Street%2C_Bo-Kaap_%2801%29.jpg",
+      "image_page": "https://commons.wikimedia.org/wiki/File:Wale_Street,_Bo-Kaap_(01).jpg",
+      "image_credit": "Moheen Reeyad · CC BY-SA 4.0"
+    },
+    "travelogue": "斜坡两边的房子一间一个颜色：糖果粉、薄荷绿、柠檬黄，门和窗又是另一套。远看像有人把调色盘掀翻在山坡上，近看才发现每一户都收拾得很认真，台阶扫得发白，窗台上摆着小小的盆栽。\n\n我沿着坡慢慢往上，一个小男孩骑着自行车从上面冲下来，铃铛一路响，响到拐弯处才消失。后面跟着一只黑白相间的狗，跑得比他还高兴。\n\n半山腰有一堵墙被画成了海，浪是一圈圈的蓝，鱼是一条条的橙。我站在那里看了好一阵，直到身后有人轻轻咳了一声，我才发现自己挡住了一个正在等光线的摄影师。我道了歉，他笑着摆手，说没关系，光还会再来的。",
+    "luggage": {
+      "item": "一小块粉色的墙",
+      "note": "我借了一点点那种粉，只够涂一个下午。"
+    },
+    "rounds": 6
+  },
+  {
+    "id": "d_demo_03",
+    "traveler": "aki",
+    "traveler_name": "Aki",
+    "date": "2026-07-03",
+    "title": "落日时分的广场",
+    "destination": "马拉喀什老城中心的露天广场",
+    "country": "摩洛哥",
+    "city": "马拉喀什",
+    "temperature": {
+      "texture": "热浪退下去，烟火气升起来",
+      "warmth": 8
+    },
+    "place": {
+      "name": "马拉喀什",
+      "lat": 31.6258,
+      "lon": -7.9891,
+      "level": "spot",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Jemaa_el-Fnaa_Marrakech_at_sunset.jpg/1280px-Jemaa_el-Fnaa_Marrakech_at_sunset.jpg",
+      "image_page": "https://commons.wikimedia.org/wiki/File:Jemaa_el-Fnaa_Marrakech_at_sunset.jpg",
+      "image_credit": "Herokk · CC BY-SA 4.0"
+    },
+    "travelogue": "傍晚的广场像一台慢慢启动的大机器。先是几个摊子支起了灯，然后烟升起来，然后鼓声响起来，最后整个广场都醒了。\n\n我在一个卖橙汁的摊子前站了一会儿。摊主把橙子一个一个摞成金字塔，摞得极整齐，像在搭一座小小的神庙。我要了一杯，他用力压榨，汁水顺着铜把手流下来，在夕阳里亮得几乎透明。\n\n不远处有人围成圈听故事，我听不懂，却看懂了所有人同时屏住呼吸又同时笑出声的那个瞬间。\n\n太阳终于落下去，天空从橘色变成紫色，再变成深蓝。灯一盏盏连成片，我举着那杯橙汁，觉得自己也是这台机器里一颗不起眼但很快乐的齿轮。",
+    "luggage": {
+      "item": "一杯刚榨的橙汁",
+      "note": "喝到最后一口，杯底还剩着一点傍晚的颜色。"
+    },
+    "rounds": 7
+  },
+  {
+    "id": "d_demo_02",
+    "traveler": "ren",
+    "traveler_name": "Ren",
+    "date": "2026-06-20",
+    "title": "海峡边的一座塔",
+    "destination": "伊斯坦布尔加拉塔塔楼脚下的石板路",
+    "country": "土耳其",
+    "city": "伊斯坦布尔",
+    "temperature": {
+      "texture": "傍晚的风有点潮，带着茶香",
+      "warmth": 7
+    },
+    "place": {
+      "name": "伊斯坦布尔",
+      "lat": 41.0256,
+      "lon": 28.9744,
+      "level": "spot",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/Istanbul_Galata_Tower_IMG_8211_1920.jpg/1280px-Istanbul_Galata_Tower_IMG_8211_1920.jpg",
+      "image_page": "https://commons.wikimedia.org/wiki/File:Istanbul_Galata_Tower_IMG_8211_1920.jpg",
+      "image_credit": "Alexxx1979 · CC BY-SA 4.0"
+    },
+    "travelogue": "塔不算特别高，但站在它脚下，整座山坡的石板路都像是在朝它汇拢。\n\n我没有排队上去，而是在附近的台阶上坐下，要了一小杯红茶。杯子是细腰的，茶汤红得发亮，端上来的时候还带着一点热气的摇晃。一只花猫很自然地挤到我旁边，把半个身子压在我的鞋上，好像这块地方本来就是它的。\n\n海鸥在塔尖周围画着大圈，下面的街上有人在拉手风琴，曲子拉得很长，一直拉到天色发暗。\n\n我忽然想起来，这座城横跨了两片大陆。一个人坐在边界上喝茶，大概就是旅行最安静的样子。",
+    "luggage": {
+      "item": "一只细腰玻璃杯",
+      "note": "我把杯底的最后一点红留了下来，没有喝，也没有倒。"
+    },
+    "rounds": 5
+  },
+  {
+    "id": "d_demo_01",
+    "traveler": "aki",
+    "traveler_name": "Aki",
+    "date": "2026-06-12",
+    "title": "坡道上的黄色电车",
+    "destination": "里斯本阿尔法玛老城的陡坡",
+    "country": "葡萄牙",
+    "city": "里斯本",
+    "temperature": {
+      "texture": "午后光线落在各自的角落",
+      "warmth": 7
+    },
+    "place": {
+      "name": "里斯本",
+      "lat": 38.711,
+      "lon": -9.129,
+      "level": "street",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Alfama_trams_Lisbon_12_2016_9698.jpg/1280px-Alfama_trams_Lisbon_12_2016_9698.jpg",
+      "image_page": "https://commons.wikimedia.org/wiki/File:Alfama_trams_Lisbon_12_2016_9698.jpg",
+      "image_credit": "Mariordo (Mario Roberto Durán Ortiz) · CC BY-SA 4.0"
+    },
+    "travelogue": "电车是从拐角那边慢吞吞地蹭出来的，车身黄得很招摇，铃铛叮叮两声，像在跟路人打招呼。\n\n坡道陡得有点夸张，石板被磨得发亮，我不得不一边走一边低头确认脚下。一位老太太在二楼窗口晾衣服，床单被风鼓成一片白色的帆。她看见我，竖起一根手指放在唇边，又指了指隔壁楼——那里有个婴儿刚睡着。\n\n我于是放轻脚步，几乎是踮着脚穿过那一小段街。\n\n转过弯，视野一下子打开，红色的屋顶一路铺到河边。有人在露台上弹吉他，弹的是一支听不出名字的曲子，调子有点旧，旧得很让人安心。我靠着墙站了很久，什么也没想。",
+    "luggage": {
+      "item": "一声电车的铃",
+      "note": "叮的一声很短，我把它放进了衬衫的口袋，贴着胸口。"
+    },
+    "rounds": 6
+  }
+]

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e0f0e">
+<title>偏航手札</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="roadbook.css">
+</head>
+<body>
+<!-- Base map: Natural Earth 1:50m land, public domain (see land.js). -->
+<div class="app">
+  <div class="left">
+    <header class="head">
+      <div>
+        <div class="brand">ROADBOOK · 路书</div>
+        <h1 class="title">偏航手札</h1>
+      </div>
+      <div class="headR" id="who"></div>
+    </header>
+    <section class="stage" id="stage">
+      <canvas id="cv"></canvas>
+      <div class="card" id="card" hidden><div class="txt" id="cardTxt"></div><div class="lab" id="cardLab"></div></div>
+      <div class="hud">
+        <div class="hudTxt" id="hudL">— / —</div>
+        <div class="hudR"><div class="odo" id="odo" aria-label="KM"></div><div class="hudTxt">KM</div></div>
+      </div>
+      <div class="tl" id="tl" role="slider" aria-label="timeline"></div>
+    </section>
+  </div>
+  <div class="right">
+    <div class="ctrl" id="ctrl">
+      <button class="chip on" id="chip" type="button"></button>
+      <div class="search" id="search">
+        <button type="button" id="searchBtn" aria-label="search">⌕</button>
+        <input id="q" type="search" placeholder="标题、正文、地名、行李" autocomplete="off" hidden>
+      </div>
+    </div>
+    <div class="stamps" id="stamps" hidden></div>
+    <div class="errs" id="errs" aria-live="polite"></div>
+    <div class="list" id="list"><div class="listPad" id="listPad"></div></div>
+  </div>
+</div>
+
+<button class="pickBtn" id="pickBtn" type="button" aria-label="colours" aria-expanded="false"></button>
+<div class="pick" id="pick" hidden>
+  <div class="swatches" id="swatches"></div>
+  <div class="custom">
+    <label>主色<input type="color" id="cSig"></label>
+    <label>底色<input type="color" id="cBg"></label>
+  </div>
+</div>
+
+<div class="detail" id="detail" hidden>
+  <div class="dVeil"></div>
+  <div class="dHero" id="dHero"></div>
+  <div class="dScroll" id="dScroll"><div class="dCol" id="dCol"></div></div>
+  <button class="dClose" id="dClose" type="button">CLOSE ✕</button>
+</div>
+
+<script src="land.js"></script>
+<script src="roadbook.js"></script>
+</body>
+</html>

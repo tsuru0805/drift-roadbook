@@ -89,3 +89,20 @@ def test_pick_index_follows_the_list_the_model_saw_and_rejects_bools():
 
 def test_no_queries_no_coords_no_photo():
     assert PhotoFinder(Eye([]), client=commons({})).find([], None, "游记") is None
+
+
+def test_thumbnails_use_a_standard_width():
+    from drift_roadbook import photo
+    assert photo._THUMB_W in (250, 330, 500, 960, 1280)
+
+
+def test_no_candidate_downloadable_is_an_error_not_a_verdict():
+    import pytest
+    from drift_roadbook.photo import PhotoSearchError
+
+    def h(req):
+        if "upload.wikimedia.org" in str(req.url):
+            return httpx.Response(400, text="Use thumbnail sizes listed on https://w.wiki/GHai")
+        return httpx.Response(200, json={"query": {"pages": {"0": page(0, "Canal.jpg")}}})
+    with pytest.raises(PhotoSearchError):
+        PhotoFinder(Eye([0]), client=httpx.Client(transport=httpx.MockTransport(h))).find(["q"], None, "游记")

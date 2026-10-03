@@ -34,16 +34,19 @@ class TemperatureSource(Protocol):
 
 
 class Reminder(Protocol):
-    def opened(self, traveler: str, summary: str) -> None:
+    """Lets your gateway keep a forgotten drift in front of the traveler (a to-do, a note, a nudge).
+    `key` identifies the drift and is the same in `opened` and `closed`; `summary` names the place."""
+
+    def opened(self, traveler: str, key: str, summary: str) -> None:
         """A drift is underway and has no travelogue yet."""
 
-    def closed(self, traveler: str) -> None:
-        """The drift was finished or abandoned."""
+    def closed(self, traveler: str, key: str, finished: bool) -> None:
+        """The drift was finished (`finished=True`) or abandoned."""
 
 
 class NullReminder:
-    def opened(self, traveler: str, summary: str) -> None:
+    def opened(self, traveler: str, key: str, summary: str) -> None:
         pass
 
-    def closed(self, traveler: str) -> None:
+    def closed(self, traveler: str, key: str, finished: bool) -> None:
         pass

@@ -205,3 +205,26 @@ def test_cli_env_never_carries_api_keys(monkeypatch, tmp_path):
     env = ClaudeCLINarrator(workdir=tmp_path, oauth_token="tok")._env()
     assert not any("API_KEY" in k or "ANTHROPIC" in k for k in env)
     assert env["CLAUDE_CODE_OAUTH_TOKEN"] == "tok"
+
+
+def test_reminder_opens_and_closes_with_the_same_key(make):
+    class Rec:
+        def __init__(self):
+            self.log = []
+
+        def opened(self, traveler, key, summary):
+            self.log.append(("open", traveler, key, summary))
+
+        def closed(self, traveler, key, finished):
+            self.log.append(("close", traveler, key, finished))
+    rec = Rec()
+    e, _ = make(reminder=rec)
+    e.start("aki")
+    walk(e, "aki", 4)
+    e.finish("aki", TRAVELOGUE, "石子")
+    e.start("ren")
+    e.abandon("ren", confirm=True)
+    (o1, t1, k1, s1), (c1, _, k1b, f1), (o2, _, k2, _), (c2, _, k2b, f2) = rec.log
+    assert (o1, c1, o2, c2) == ("open", "close", "open", "close")
+    assert k1 == k1b and k2 == k2b and k1 != k2 and f1 is True and f2 is False
+    assert "平江路茶坊" in s1

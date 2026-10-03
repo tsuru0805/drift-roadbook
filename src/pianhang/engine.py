@@ -208,7 +208,7 @@ class DriftEngine:
         self.store.put(traveler, session)
         self.store.push_kind({"kind": dest.kind, "time_of_day": dest.time_of_day,
                               "short_name": dest.short_name, "date": session["date"]})
-        self.reminder.opened(traveler, self._summary(session))
+        self.reminder.opened(traveler, session["id"], f"偏航「{session['destination']['short_name']}」还没写游记")
         chosen = "你选的地方" if wish else "今天的温度选的地方"
         return Receipt(True, (
             self._last_line(traveler) +
@@ -238,7 +238,7 @@ class DriftEngine:
             "history": [], "round": 0, "narrator_state": {},
         }
         self.store.put(traveler, session)
-        self.reminder.opened(traveler, self._summary(session))
+        self.reminder.opened(traveler, session["id"], f"偏航「{session['destination']['short_name']}」还没写游记")
         return Receipt(True, (
             self._last_line(traveler) +
             f"🧭 偏航开始 — {session['date']}\n旅行者：{self.name(traveler)}\n目的地：{wish}\n\n"
@@ -325,7 +325,7 @@ class DriftEngine:
             self.store.clear(traveler)
             self.store.put_last(traveler, {"drift_id": drift_id, "short_name": dest["short_name"],
                                            "photo": "searching"})
-        self.reminder.closed(traveler)
+        self.reminder.closed(traveler, s["id"], True)
         record.id = drift_id
         self._photo(traveler, record, dest)
         level = {"spot": "具体地点", "street": "街道", "city": "城市"}.get(where.level or "", "")
@@ -386,7 +386,7 @@ class DriftEngine:
             if not s:
                 return Receipt(False, "现在没有进行中的偏航。")
             self.store.clear(traveler)
-        self.reminder.closed(traveler)
+        self.reminder.closed(traveler, s["id"], False)
         return Receipt(True, f"放弃了「{s['destination']['short_name']}」那次偏航，没有留下记录。")
 
     def status(self, traveler: str) -> Receipt:

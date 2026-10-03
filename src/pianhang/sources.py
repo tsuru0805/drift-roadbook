@@ -5,6 +5,8 @@ narrates the place itself.
 """
 from __future__ import annotations
 
+import re
+
 import httpx
 
 from .place import UA
@@ -31,6 +33,18 @@ def _extract(client: httpx.Client, base: str, title: str, chars: int) -> str:
     return next((str(p.get("extract") or "") for p in pages.values()), "").strip()
 
 
+def _related(title: str, place: str) -> bool:
+    """Search engines happily return something; only keep hits whose title actually overlaps the place
+    (any 2-character run of the title appears in what the traveler asked for, or vice versa)."""
+    t, p = title.lower(), place.lower()
+    if t in p or p in t:
+        return True
+    if t.isascii():   # Latin titles: share a real word, not just two letters
+        words = {w for w in re.findall(r"[a-z]{3,}", t)}
+        return bool(words & set(re.findall(r"[a-z]{3,}", p)))
+    return any(t[i:i + 2] in p for i in range(len(t) - 1) if t[i:i + 2].strip())
+
+
 def material(place: str, *, chars: int = 1500, timeout: float = 6.0) -> tuple[str, str | None]:
     """→ (reading material, best Wikipedia-ish title or None). Never raises."""
     parts: list[str] = []
@@ -39,7 +53,7 @@ def material(place: str, *, chars: int = 1500, timeout: float = 6.0) -> tuple[st
         with httpx.Client(timeout=timeout, follow_redirects=True) as client:
             for base in _SITES:
                 t = _search_title(client, base, place)
-                if not t:
+                if not t or not _related(t, place):
                     continue
                 text = _extract(client, base, t, chars)
                 if text:

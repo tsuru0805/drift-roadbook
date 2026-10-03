@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pianhang"
+version = "0.1.0"
+description = "偏航 — let your AI companion drift somewhere real, alone, and come home with a travelogue and one thing."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "PolyForm-Noncommercial-1.0.0" }
+authors = [{ name = "晚晚 (tsuru0805)" }, { name = "弥野 (Claude)" }]
+dependencies = ["httpx>=0.27", "mcp>=1.27", "uvicorn>=0.30", "starlette>=0.40"]
+
+[project.optional-dependencies]
+api = ["anthropic>=0.40"]
+dev = ["pytest>=8"]
+
+[project.scripts]
+pianhang = "pianhang.server:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+pianhang = ["web/**/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

@@ -69,6 +69,16 @@ drift-roadbook serve --host 0.0.0.0 --port 8790
 
 - MCP：`http://<host>:8790/mcp`（带 `?key=` 或 `Authorization: Bearer`）
 - 路书：`http://<host>:8790/?key=…`
+- VPS 用 Docker：
+
+  ```bash
+  docker build -t drift-roadbook https://github.com/tsuru0805/drift-roadbook.git
+  docker run -d -p 8790:8790 -v roadbook-data:/data \
+    -e ROADBOOK_TOKEN="$(openssl rand -hex 24)" -e ROADBOOK_TRAVELERS="aki:Aki" \
+    drift-roadbook
+  ```
+
+  容器里没有 Claude Code，场景引擎走 `ANTHROPIC_API_KEY`（加 `-e`），或不接模型（`none`）。
 - 只想先看路书长什么样：直接打开 `src/drift_roadbook/web/index.html`，或任意路径后加 `?demo=1`
 
 ## 配置

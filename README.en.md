@@ -73,6 +73,17 @@ export ROADBOOK_HOME="34.9858,135.7588,Kyoto Station"   # roadbook origin — so
 drift-roadbook serve --host 0.0.0.0 --port 8790
 ```
 
+Docker (VPS):
+
+```bash
+docker build -t drift-roadbook https://github.com/tsuru0805/drift-roadbook.git
+docker run -d -p 8790:8790 -v roadbook-data:/data \
+  -e ROADBOOK_TOKEN="$(openssl rand -hex 24)" -e ROADBOOK_TRAVELERS="aki:Aki" \
+  drift-roadbook
+```
+
+There is no Claude Code inside the container: the narrator is `ANTHROPIC_API_KEY` (pass it with `-e`) or none.
+
 MCP at `/mcp`, roadbook at `/?key=…`, read API at `/api` ([docs/API.md](docs/API.md)).
 To just look at the roadbook: open `src/drift_roadbook/web/index.html`, or add `?demo=1`.
 

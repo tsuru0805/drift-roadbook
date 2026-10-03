@@ -335,7 +335,7 @@ class DriftEngine:
             f"🧭 偏航收好了 — {s['date']} · {dest['short_name']}\n"
             f"走了 {s['round']} 轮，带回来：{luggage}\n{where_line}\n"
             "照片在找，找到合适的会放进路书；没有合适的就不放。"),
-            {"drift_id": drift_id})
+            {"drift_id": drift_id, "short_name": dest["short_name"]})
 
     def _locate(self, dest: dict) -> Place:
         where = self.resolve_place(dest.get("place_en"), dest.get("city"))

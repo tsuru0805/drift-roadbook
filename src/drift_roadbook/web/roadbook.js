@@ -183,6 +183,35 @@ function cameraFor(s, ascUpTo, W, H, home) {
   const zMax = Z_BY_LEVEL[s.level] || 26;
   return clampCam({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, z: Math.min(zMax, Math.max(Z_MIN, (W * 0.46) / span)) }, H);
 }
+// ── looking around by hand: drag, pinch / wheel zoom, "see everything" ──
+const Z_MAX = 26;
+const WORLD_W = 360 * PROJ_K;
+/** zoom within [Z_MIN, Z_MAX]; never slide the world out of view sideways; vertical as clampCam */
+function clampView(c, W, H) {
+  const z = Math.min(Z_MAX, Math.max(Z_MIN, c.z)), half = W / 2 / z;
+  const x = WORLD_W > 2 * half ? Math.min(WORLD_W - half, Math.max(half, c.x)) : WORLD_W / 2;
+  return clampCam({ x, y: c.y, z }, H);
+}
+function panBy(start, dx, dy, W, H) {
+  return clampView({ x: start.x - dx / start.z, y: start.y - dy / start.z, z: start.z }, W, H);
+}
+/** zoom around a focal point: the ground under the starting focal point stays under the current one */
+function zoomAround(start, scale, f0x, f0y, fx, fy, W, H) {
+  const z = Math.min(Z_MAX, Math.max(Z_MIN, start.z * scale));
+  const wx = start.x + (f0x - W * 0.5) / start.z, wy = start.y + (f0y - H * ANCHOR_Y) / start.z;
+  return clampView({ x: wx - (fx - W * 0.5) / z, y: wy - (fy - H * ANCHOR_Y) / z, z }, W, H);
+}
+/** frame every place visited (projected points), clear of the HUD at top and the timeline at the bottom */
+function fitAll(ps, W, H) {
+  if (!ps.length) return clampView({ x: WORLD_W / 2, y: 70, z: Z_MIN }, W, H);
+  const usableH = H - TOP_SAFE - BOTTOM_SAFE;
+  const x0 = Math.min(...ps.map((p) => p.x)), x1 = Math.max(...ps.map((p) => p.x));
+  const y0 = Math.min(...ps.map((p) => p.y)), y1 = Math.max(...ps.map((p) => p.y));
+  const z = Math.min(8, (W * 0.82) / Math.max(x1 - x0, 1), (usableH * 0.78) / Math.max(y1 - y0, 1));
+  const midY = (y0 + y1) / 2 + (H * ANCHOR_Y - (TOP_SAFE + (H - BOTTOM_SAFE)) / 2) / Math.max(z, Z_MIN);
+  return clampView({ x: (x0 + x1) / 2, y: midY, z }, W, H);
+}
+
 function toScreen(p, cam, W, H) {
   const q = proj(p);
   return { x: W * 0.5 + (q.x - cam.x) * cam.z, y: H * ANCHOR_Y + (q.y - cam.y) * cam.z };
@@ -322,6 +351,7 @@ const S = {
   points: [], labels: [], homeP: null, homeLabel: "",
   running: false, last: 0, landCv: null, landKey: "",
   cumStart: [], parts: [], scratch: document.createElement("canvas"),
+  explore: 0, exploreT: 0,          // looking around by hand: the photo steps aside
 };
 
 function resetStage() {
@@ -460,6 +490,7 @@ function drawStage(now, dt) {
   const c0 = S.cam, t = S.camT, k = 1 - Math.exp(-dt * 3.2);
   S.cam = { x: c0.x + (t.x - c0.x) * k, y: c0.y + (t.y - c0.y) * k, z: c0.z + (t.z - c0.z) * k };
   if (S.seg < 1) S.seg = Math.min(1, S.seg + dt / 1.3);
+  S.explore += (S.exploreT - S.explore) * (1 - Math.exp(-dt * 10));
   const c = S.cam;
   const sx = (x) => W * 0.5 + (x - c.x) * c.z, sy = (y) => H * ANCHOR_Y + (y - c.y) * c.z;
 
@@ -519,10 +550,11 @@ function drawStage(now, dt) {
   }
   // photo (previous one fades out; current one unfolds + develops), leader line, signal dot
   const gh = S.ghost;
-  if (gh.rect) { const ga = 1 - Math.min(1, (now - gh.t0) / 0.9); if (ga > 0) drawPhoto(ctx, gh, ga, true, now); }
+  const fade = 1 - S.explore;   // looking around: the photo steps aside entirely
+  if (gh.rect) { const ga = 1 - Math.min(1, (now - gh.t0) / 0.9); if (ga > 0 && fade > 0.01) drawPhoto(ctx, gh, ga * fade, true, now); }
   const ph = S.photo;
-  drawPhoto(ctx, ph, 1, false, now);
-  if (a >= 0 && ph.rect) {
+  if (fade > 0.01) drawPhoto(ctx, ph, fade, false, now);
+  if (a >= 0 && ph.rect && S.explore < 0.5) {
     const r = ph.rect, cx = r.x + (r.ax ? r.w : 0), cy = r.y + (r.ay ? r.h : 0);
     const le = 1 - Math.pow(1 - clamp((now - ph.t0) / 0.7, 0, 1), 3);
     ctx.strokeStyle = A(theme.ink, 0.55); ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
@@ -708,6 +740,7 @@ function go(st) {
   S.seg = i > prev ? 0 : 1;                       // moving forward draws the segment; going back snaps
   const target = cameraFor(st, state.asc.slice(0, i + 1), S.W, S.H, state.home);
   S.camT = target;
+  setExploring(false);
   const rect = placePhoto(st, target, S.W, S.H);
   const t = nowS();
   S.ghost = { img: S.photo.img, cors: S.photo.cors, rect: S.photo.rect, t0: t };
@@ -739,11 +772,72 @@ list.addEventListener("scroll", () => {
   if (hit.id !== state.activeId) go(hit);
 }, { passive: true });
 
+// ── looking around: one-finger / mouse drag pans, two fingers pinch, wheel / trackpad zooms
+function setExploring(on) {
+  S.exploreT = on ? 1 : 0;
+  $("card").style.opacity = on ? "0" : "";
+  const b = $("allBtn");
+  if (b) b.textContent = on ? "回到这一站" : "看全部";
+}
+let dragged = false;
+(function () {
+  const ptrs = new Map();
+  let start = null, f0 = null, d0 = 0;
+  const local = (ev) => { const b = cv.getBoundingClientRect(); return { x: ev.clientX - b.left, y: ev.clientY - b.top }; };
+  const restart = () => {
+    start = S.cam; const ps = [...ptrs.values()];
+    if (ps.length >= 2) { f0 = { x: (ps[0].x + ps[1].x) / 2, y: (ps[0].y + ps[1].y) / 2 }; d0 = Math.hypot(ps[0].x - ps[1].x, ps[0].y - ps[1].y) || 1; }
+    else if (ps.length === 1) { f0 = { x: ps[0].x, y: ps[0].y }; }
+  };
+  cv.addEventListener("pointerdown", (ev) => {
+    ptrs.set(ev.pointerId, local(ev)); dragged = false; restart();
+    try { cv.setPointerCapture(ev.pointerId); } catch (e) { /* ignore */ }
+  });
+  cv.addEventListener("pointermove", (ev) => {
+    if (!ptrs.has(ev.pointerId)) return;
+    ptrs.set(ev.pointerId, local(ev));
+    const ps = [...ptrs.values()];
+    let c;
+    if (ps.length >= 2) {
+      const f = { x: (ps[0].x + ps[1].x) / 2, y: (ps[0].y + ps[1].y) / 2 };
+      const d = Math.hypot(ps[0].x - ps[1].x, ps[0].y - ps[1].y) || 1;
+      c = zoomAround(start, d / d0, f0.x, f0.y, f.x, f.y, S.W, S.H);
+    } else {
+      const dx = ps[0].x - f0.x, dy = ps[0].y - f0.y;
+      if (!dragged && Math.hypot(dx, dy) < 6) return;      // a tap, not a drag
+      c = panBy(start, dx, dy, S.W, S.H);
+    }
+    if (!dragged) { dragged = true; setExploring(true); }
+    S.cam = c; S.camT = c;
+  });
+  const up = (ev) => { ptrs.delete(ev.pointerId); restart(); };
+  cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
+  cv.addEventListener("wheel", (ev) => {
+    ev.preventDefault();
+    const p = local(ev);
+    const c = zoomAround(S.cam, Math.exp(-ev.deltaY * (ev.ctrlKey ? 0.01 : 0.0015)), p.x, p.y, p.x, p.y, S.W, S.H);
+    S.cam = c; S.camT = c; setExploring(true);
+  }, { passive: false });
+})();
+function showAll() {
+  const ps = (state.home ? [proj(state.home)] : []).concat(state.asc.filter((x) => x.onMap && x.at).map((x) => proj(x.at)));
+  S.camT = fitAll(ps, S.W, S.H);
+  setExploring(true);
+}
+function backToStop() {
+  const st = activeStop();
+  const i = st ? state.ascIndex.get(st.id) : null;
+  if (st && i != null) S.camT = cameraFor(st, state.asc.slice(0, i + 1), S.W, S.H, state.home);
+  setExploring(false);
+}
+$("allBtn").addEventListener("click", () => { if (S.exploreT > 0.5) backToStop(); else showAll(); });
+
 // ── map tap (photo → detail, city dot → jump through the visits there)
 cv.addEventListener("click", (ev) => {
+  if (dragged) { dragged = false; return; }   // the end of a drag is not a tap
   const b = cv.getBoundingClientRect(), x = ev.clientX - b.left, y = ev.clientY - b.top;
   const r = S.photo.rect, a = activeStop();
-  if (r && a && S.photo.img && x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) { openDetail(a); return; }
+  if (r && a && S.photo.img && S.exploreT < 0.5 && x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) { openDetail(a); return; }
   const city = hitCity(state.visible, S.cam, S.W, S.H, x, y);
   if (!city) return;
   const nx = nextAtPlace(state.visible, city, state.activeId);

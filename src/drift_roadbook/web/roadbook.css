@@ -68,7 +68,13 @@ a { color: inherit; }
   height: clamp(300px, 42vh, 420px); height: clamp(300px, 42dvh, 420px);
   border-bottom: 1px solid var(--hair);
 }
-.stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: pointer; }
+.stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
+.stage canvas:active { cursor: grabbing; }
+.allBtn {
+  position: absolute; top: 10px; right: 12px; padding: 4px 8px; border: 1px solid var(--hair);
+  background: color-mix(in srgb, var(--bg) 72%, transparent); color: var(--ink);
+  font-family: var(--mono); font-size: 9px; letter-spacing: 1.3px; cursor: pointer;
+}
 .hud { position: absolute; left: 20px; right: 20px; bottom: 36px; display: flex; justify-content: space-between; align-items: center; pointer-events: none; }
 .hudTxt { font-family: var(--mono); font-size: 9px; letter-spacing: 1.3px; color: var(--dim); white-space: pre; }
 .hudTxt b { font-weight: normal; color: var(--ink); }

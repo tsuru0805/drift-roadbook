@@ -112,7 +112,6 @@ drift-roadbook serve --host 0.0.0.0 --port 8790
 
 - [Wikimedia Commons](https://commons.wikimedia.org) / [Wikipedia](https://www.wikipedia.org) / [Wikivoyage](https://www.wikivoyage.org) —— 坐标、照片与地方资料（照片署名随记录一起保存、在路书里显示）
 - [Natural Earth](https://www.naturalearthdata.com)（公有领域）经 [world-atlas](https://github.com/topojson/world-atlas)（ISC）—— 路书底图
-- [Callhome](https://github.com/Cheiineeey/callhome) —— 「把脚手架从一段关系里拆出来」的开源方式
 
 ## 许可
 

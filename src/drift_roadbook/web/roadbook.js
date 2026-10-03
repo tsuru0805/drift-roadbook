@@ -186,20 +186,25 @@ function cameraFor(s, ascUpTo, W, H, home) {
 // ── looking around by hand: drag, pinch / wheel zoom, "see everything" ──
 const Z_MAX = 26;
 const WORLD_W = 360 * PROJ_K;
-/** zoom within [Z_MIN, Z_MAX]; never slide the world out of view sideways; vertical as clampCam */
-function clampView(c, W, H) {
+/** zoom within [Z_MIN, Z_MAX]; never slide the world out of view sideways; vertical as clampCam.
+ *  keepX = camera x when the gesture began: a stop near the world's edge may already sit past the
+ *  sideways bound — widen the bound to include it, so the first touch never yanks the map back.
+ *  Same algorithm (and tests) as the app's stage.ts. */
+function clampView(c, W, H, keepX) {
   const z = Math.min(Z_MAX, Math.max(Z_MIN, c.z)), half = W / 2 / z;
-  const x = WORLD_W > 2 * half ? Math.min(WORLD_W - half, Math.max(half, c.x)) : WORLD_W / 2;
+  let lo = half, hi = WORLD_W - half;
+  if (keepX !== undefined) { lo = Math.min(lo, keepX); hi = Math.max(hi, keepX); }
+  const x = lo <= hi ? Math.min(hi, Math.max(lo, c.x)) : WORLD_W / 2;
   return clampCam({ x, y: c.y, z }, H);
 }
 function panBy(start, dx, dy, W, H) {
-  return clampView({ x: start.x - dx / start.z, y: start.y - dy / start.z, z: start.z }, W, H);
+  return clampView({ x: start.x - dx / start.z, y: start.y - dy / start.z, z: start.z }, W, H, start.x);
 }
 /** zoom around a focal point: the ground under the starting focal point stays under the current one */
 function zoomAround(start, scale, f0x, f0y, fx, fy, W, H) {
   const z = Math.min(Z_MAX, Math.max(Z_MIN, start.z * scale));
   const wx = start.x + (f0x - W * 0.5) / start.z, wy = start.y + (f0y - H * ANCHOR_Y) / start.z;
-  return clampView({ x: wx - (fx - W * 0.5) / z, y: wy - (fy - H * ANCHOR_Y) / z, z }, W, H);
+  return clampView({ x: wx - (fx - W * 0.5) / z, y: wy - (fy - H * ANCHOR_Y) / z, z }, W, H, start.x);
 }
 /** frame every place visited (projected points), clear of the HUD at top and the timeline at the bottom */
 function fitAll(ps, W, H) {
@@ -356,6 +361,7 @@ const S = {
 
 function resetStage() {
   goGen += 1; S.a = -1; S.seg = 1;
+  setExploring(false);
   S.photo = { img: null, rect: null, t0: 0 }; S.ghost = { img: null, rect: null, t0: 0 };
   hideCard();
 }
@@ -790,11 +796,13 @@ let dragged = false;
     else if (ps.length === 1) { f0 = { x: ps[0].x, y: ps[0].y }; }
   };
   cv.addEventListener("pointerdown", (ev) => {
+    if (ev.pointerType === "mouse" && ev.button !== 0) return;   // only the main button drags
     ptrs.set(ev.pointerId, local(ev)); dragged = false; restart();
     try { cv.setPointerCapture(ev.pointerId); } catch (e) { /* ignore */ }
   });
   cv.addEventListener("pointermove", (ev) => {
     if (!ptrs.has(ev.pointerId)) return;
+    if (ev.pointerType === "mouse" && ev.buttons === 0) { up(ev); return; }   // a lost mouse-up
     ptrs.set(ev.pointerId, local(ev));
     const ps = [...ptrs.values()];
     let c;
@@ -805,19 +813,32 @@ let dragged = false;
     } else {
       const dx = ps[0].x - f0.x, dy = ps[0].y - f0.y;
       if (!dragged && Math.hypot(dx, dy) < 6) return;      // a tap, not a drag
-      c = panBy(start, dx, dy, S.W, S.H);
+      if (!dragged) { start = S.cam; f0 = { x: ps[0].x, y: ps[0].y }; }   // camera may still be flying: start from where it is now
+      c = panBy(start, ps[0].x - f0.x, ps[0].y - f0.y, S.W, S.H);
     }
     if (!dragged) { dragged = true; setExploring(true); }
     S.cam = c; S.camT = c;
   });
-  const up = (ev) => { ptrs.delete(ev.pointerId); restart(); };
-  cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
+  function up(ev) { ptrs.delete(ev.pointerId); restart(); }
+  cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up); cv.addEventListener("lostpointercapture", up);
   cv.addEventListener("wheel", (ev) => {
     ev.preventDefault();
     const p = local(ev);
-    const c = zoomAround(S.cam, Math.exp(-ev.deltaY * (ev.ctrlKey ? 0.01 : 0.0015)), p.x, p.y, p.x, p.y, S.W, S.H);
+    const dy = ev.deltaY * (ev.deltaMode === 1 ? 16 : ev.deltaMode === 2 ? 400 : 1);   // lines / pages → pixels
+    const c = zoomAround(S.cam, Math.exp(-dy * (ev.ctrlKey ? 0.01 : 0.0015)), p.x, p.y, p.x, p.y, S.W, S.H);
     S.cam = c; S.camT = c; setExploring(true);
   }, { passive: false });
+  // Safari trackpad pinch arrives as gesture events, not ctrl+wheel
+  let gStart = null;
+  cv.addEventListener("gesturestart", (ev) => { ev.preventDefault(); gStart = S.cam; });
+  cv.addEventListener("gesturechange", (ev) => {
+    ev.preventDefault();
+    if (!gStart) return;
+    const p = local(ev);
+    const c = zoomAround(gStart, ev.scale, p.x, p.y, p.x, p.y, S.W, S.H);
+    S.cam = c; S.camT = c; setExploring(true);
+  });
+  cv.addEventListener("gestureend", (ev) => { ev.preventDefault(); gStart = null; });
 })();
 function showAll() {
   const ps = (state.home ? [proj(state.home)] : []).concat(state.asc.filter((x) => x.onMap && x.at).map((x) => proj(x.at)));
@@ -989,8 +1010,12 @@ function onResize() {
   const a = activeStop();
   if (a && S.a >= 0) {
     const i = S.a;
-    S.camT = cameraFor(a, state.asc.slice(0, i + 1), S.W, S.H, state.home);
-    S.cam = Object.assign({}, S.camT);
+    if (S.exploreT > 0.5) {
+      S.cam = S.camT = clampView(S.camT, S.W, S.H, S.camT.x);   // keep the view she was looking at
+    } else {
+      S.camT = cameraFor(a, state.asc.slice(0, i + 1), S.W, S.H, state.home);
+      S.cam = Object.assign({}, S.camT);
+    }
     const rect = placePhoto(a, S.camT, S.W, S.H);
     S.photo.rect = rect;
     if (!$("card").hidden) showCard(a, rect, $("cardLab").textContent.startsWith("图没"));

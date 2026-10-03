@@ -31,3 +31,12 @@ def test_refuses_when_settings_route_to_paid_api(monkeypatch, tmp_path, settings
     monkeypatch.setattr(subprocess, "run", lambda *a, **k: pytest.fail("must not run"))
     with pytest.raises(NarratorError):
         ClaudeCLINarrator(workdir=tmp_path / "w").complete("s", "p")
+
+
+@pytest.mark.parametrize("key", ["ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_BASE_URL"])
+def test_settings_env_with_anthropic_endpoint_refused(monkeypatch, tmp_path, key):
+    (tmp_path / ".claude").mkdir()
+    (tmp_path / ".claude" / "settings.json").write_text(json.dumps({"env": {key: "x"}}))
+    monkeypatch.setenv("HOME", str(tmp_path))
+    with pytest.raises(NarratorError):
+        ClaudeCLINarrator(workdir=tmp_path / "w").complete("s", "p")

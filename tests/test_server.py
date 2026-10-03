@@ -22,7 +22,7 @@ def eng(tmp_path):
 
 def test_read_api_and_web(eng, monkeypatch):
     monkeypatch.setenv("PIANHANG_HOME", "34.9858,135.7588,京都站")
-    c = TestClient(server.build_http_app(eng, None))
+    c = TestClient(server.build_http_app(eng, None), base_url="http://localhost")
     cfg = c.get("/api/config").json()
     assert cfg["home"] == {"lat": 34.9858, "lon": 135.7588, "label": "京都站"} and cfg["travelers"] == [{"id": "aki", "name": "Aki"}]
     rows = c.get("/api/drifts?traveler=aki").json()
@@ -35,7 +35,7 @@ def test_read_api_and_web(eng, monkeypatch):
 
 
 def test_key_guards_api_and_mcp_but_not_page(eng):
-    c = TestClient(server.build_http_app(eng, "s3cret"))
+    c = TestClient(server.build_http_app(eng, "s3cret"), base_url="http://localhost")
     assert c.get("/api/config").status_code == 401
     assert c.get("/api/config?key=wrong").status_code == 401
     assert c.get("/api/config?key=s3cret").status_code == 200
@@ -58,7 +58,7 @@ def test_refuses_public_bind_without_key(monkeypatch, tmp_path):
 
 
 def test_without_key_api_only_answers_as_localhost(eng):
-    c = TestClient(server.build_http_app(eng, None))
+    c = TestClient(server.build_http_app(eng, None), base_url="http://localhost")
     assert c.get("/api/config", headers={"host": "localhost:8790"}).status_code == 200
     assert c.get("/api/config", headers={"host": "evil.example"}).status_code == 403
 

@@ -175,7 +175,7 @@ def build_http_app(engine: DriftEngine, token: str | None):
         r = await asyncio.to_thread(engine.storage.get, request.path_params["drift_id"])
         return JSONResponse(r.to_api(engine.name(r.traveler))) if r else err(404, "not found")
 
-    loopback_hosts = {"127.0.0.1", "localhost", "::1", "[::1]", "testserver"}
+    loopback_hosts = {"127.0.0.1", "localhost", "::1", "[::1]"}
 
     class Auth(BaseHTTPMiddleware):
         async def dispatch(self, request, call_next):

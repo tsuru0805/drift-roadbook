@@ -36,25 +36,35 @@ class ClaudeCLINarrator:
     def _env(self) -> dict[str, str]:
         # strip every route to pay-per-use: API keys, and the switches that send Claude Code to a
         # cloud provider's billing (Bedrock / Vertex / Foundry)
-        env = {k: v for k, v in os.environ.items()
-               if "API_KEY" not in k and "ANTHROPIC" not in k and not k.startswith("CLAUDE_CODE_USE_")}
+        env = {k: v for k, v in os.environ.items() if not self._risky_env_key(k)}
         env.setdefault("HOME", os.path.expanduser("~"))
         if self.oauth_token:
             env["CLAUDE_CODE_OAUTH_TOKEN"] = self.oauth_token
         return env
 
+    MANAGED_SETTINGS = ("/Library/Application Support/ClaudeCode/managed-settings.json",
+                        "/etc/claude-code/managed-settings.json")
+
     @staticmethod
-    def check_settings(home: str | None = None) -> None:
-        """Refuse to run if Claude Code settings could route calls to an API key (`apiKeyHelper`
-        or an API key in the settings' `env`) — that would bypass the environment scrubbing."""
-        path = Path(home or os.path.expanduser("~")) / ".claude" / "settings.json"
-        try:
-            data = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            return
-        env = data.get("env") if isinstance(data.get("env"), dict) else {}
-        if data.get("apiKeyHelper") or any("API_KEY" in k or k.startswith("CLAUDE_CODE_USE_") for k in env):
-            raise NarratorError(f"{path} 里配了 apiKeyHelper / API key，claude -p 可能走按量计费——不运行。")
+    def _risky_env_key(k: str) -> bool:
+        return "API_KEY" in k or "ANTHROPIC" in k or k.startswith("CLAUDE_CODE_USE_")
+
+    @classmethod
+    def check_settings(cls, home: str | None = None) -> None:
+        """Refuse to run if Claude Code settings could route calls to pay-per-use (`apiKeyHelper`, or an
+        API key / Anthropic endpoint / cloud-provider switch in the settings' `env`) — settings would
+        bypass the environment scrubbing."""
+        paths = [Path(home or os.path.expanduser("~")) / ".claude" / "settings.json",
+                 *(Path(p) for p in cls.MANAGED_SETTINGS)]
+        for path in paths:
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            env = data.get("env") if isinstance(data.get("env"), dict) else {}
+            if data.get("apiKeyHelper") or any(cls._risky_env_key(k) for k in env):
+                raise NarratorError(f"{path} 里配了 apiKeyHelper / API key / Anthropic 端点，"
+                                    "claude -p 可能走按量计费——不运行。")
 
     def _run(self, prompt: str, args: list[str]) -> str:
         self.workdir.mkdir(parents=True, exist_ok=True)

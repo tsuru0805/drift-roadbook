@@ -101,7 +101,9 @@ class DriftEngine:
         """A session this engine did not open (e.g. another mode sharing the state directory)."""
         return not isinstance(session.get("destination"), dict) or "short_name" not in session["destination"]
 
-    _FOREIGN = Receipt(False, "这段进行中的偏航不是这台引擎开的（另一种偏航），这里处理不了它。")
+    @staticmethod
+    def _foreign_receipt() -> Receipt:
+        return Receipt(False, "这段进行中的偏航不是这台引擎开的（另一种偏航），这里处理不了它。")
 
     def _last_line(self, traveler: str) -> str:
         """Report once what happened to the last drift's photo. Call with the traveler's lock held."""
@@ -279,7 +281,7 @@ class DriftEngine:
             if not s:
                 return Receipt(False, "现在没有进行中的偏航。要出发请调用 start_drift。")
             if self._foreign(s):
-                return self._FOREIGN
+                return self._foreign_receipt()
             if s["round"] >= self.max_rounds:
                 return Receipt(False, self.prompts.last_round.format(round=s["round"]) +
                                "\n调用 finish_drift(travelogue=…, luggage=…)。", {"round": s["round"]})
@@ -316,7 +318,12 @@ class DriftEngine:
             if not s:
                 return Receipt(False, "现在没有进行中的偏航，没有可以收尾的。")
             if self._foreign(s):
-                return self._FOREIGN
+                return self._foreign_receipt()
+            if s.get("saved_id"):
+                # stored last time, only the cleanup failed: never store it twice
+                self.store.clear(traveler)
+                return Receipt(True, f"🧭 这次偏航上次已经存好了（{s['saved_id']}），刚刚收尾完毕。",
+                               {"drift_id": s["saved_id"], "short_name": s["destination"]["short_name"]})
             draft = s.get("draft") or {}
             travelogue = travelogue or draft.get("travelogue", "")
             luggage = luggage or draft.get("luggage", "")
@@ -344,21 +351,32 @@ class DriftEngine:
                 traveler=traveler, date=s["date"], title=dest["short_name"],
                 destination=dest["destination"], travelogue=f"{travelogue}\n\n{footer}",
                 luggage_item=luggage, luggage_note=(note or "").strip(), country=dest.get("country", ""),
-                city=dest.get("city", ""), temperature=temp, place=where, rounds=s["round"])
+                city=dest.get("city", ""), temperature=temp, place=where, rounds=s["round"],
+                id=draft.get("pending_id", ""))
             try:
                 drift_id = self.storage.save(record)
             except Exception as e:
-                s["draft"] = {"travelogue": travelogue, "luggage": luggage, "note": note}
+                # a storage that got halfway (record created, rest failed, could not undo) raises with
+                # `drift_id`; the retry then completes that record instead of creating another one
+                s["draft"] = {"travelogue": travelogue, "luggage": luggage, "note": note,
+                              "pending_id": getattr(e, "drift_id", "") or draft.get("pending_id", "")}
                 self.store.put(traveler, s)
                 return Receipt(False, f"游记没存进去：{type(e).__name__}: {str(e)[:200]}\n"
                                       "偏航还留着，你写的游记和带走的东西也替你存在偏航里了——"
                                       "稍后直接调用 finish_drift() 就行，不用重写。")
             try:
                 self.store.clear(traveler)
+            except OSError:
+                # stored, but the session file would not go away: mark it so a retry never stores twice
+                try:
+                    self.store.put(traveler, {**s, "saved_id": drift_id})
+                except OSError:
+                    pass
+            try:
                 self.store.put_last(traveler, {"drift_id": drift_id, "short_name": dest["short_name"],
                                                "photo": "searching", "photo_started": time.time()})
             except OSError:
-                pass   # the drift itself is stored; worst case the next start shows it once more
+                pass
         try:
             self.reminder.closed(traveler, s["id"], True)
         except Exception:
@@ -427,7 +445,7 @@ class DriftEngine:
             if not s:
                 return Receipt(False, "现在没有进行中的偏航。")
             if self._foreign(s):
-                return self._FOREIGN
+                return self._foreign_receipt()
             self.store.clear(traveler)
         self.reminder.closed(traveler, s["id"], False)
         return Receipt(True, f"放弃了「{s['destination']['short_name']}」那次偏航，没有留下记录。")

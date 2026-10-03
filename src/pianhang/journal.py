@@ -20,7 +20,8 @@ class JournalTemperature:
 
     def collect(self, traveler: str, mood: str) -> str | None:
         parts: list[str] = []
-        safe = bool(traveler) and "/" not in traveler and "\\" not in traveler and traveler not in (".", "..")
+        safe = (bool(traveler) and not any(ch in traveler for ch in ("/", "\\", "\x00"))
+                and traveler not in (".", ".."))
         if self.folder and self.folder.is_dir() and safe:
             # per traveler: only <folder>/<traveler>/ — never the shared root, so travelers don't read
             # each other's notes; without per_traveler the whole folder is everyone's

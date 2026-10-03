@@ -270,3 +270,35 @@ def test_photo_error_and_interrupted_search_are_reported_as_such(make):
     assert "出错了" in e.status("aki").text and "commons down" in e.store.get_last("aki")["photo_error"]
     e.store.put_last("ren", {"drift_id": "x", "short_name": "某地", "photo": "searching", "photo_started": 0})
     assert "中断" in e.status("ren").text
+
+
+def test_half_saved_record_is_completed_not_duplicated(make, tmp_path):
+    class Half(Exception):
+        drift_id = "d_half"
+
+    class Store(SQLiteStorage):
+        calls = []
+
+        def save(self, record):
+            Store.calls.append(record.id)
+            if len(Store.calls) == 1:
+                raise Half("luggage failed, rollback failed")
+            return record.id or "new"
+    e, _ = make(storage=Store(tmp_path / "h.db"))
+    e.start("aki")
+    walk(e, "aki", 4)
+    assert not e.finish("aki", TRAVELOGUE, "石子").ok
+    r = e.finish("aki")
+    assert r.ok and Store.calls == ["", "d_half"] and r.data["drift_id"] == "d_half"
+
+
+def test_stored_but_not_cleared_is_never_stored_twice(make, monkeypatch):
+    e, _ = make()
+    e.start("aki")
+    walk(e, "aki", 4)
+    real_clear = e.store.clear
+    monkeypatch.setattr(e.store, "clear", lambda t: (_ for _ in ()).throw(OSError("busy")))
+    assert e.finish("aki", TRAVELOGUE, "石子").ok
+    monkeypatch.setattr(e.store, "clear", real_clear)
+    r = e.finish("aki")
+    assert r.ok and "已经存好了" in r.text and len(e.storage.list("aki")) == 1

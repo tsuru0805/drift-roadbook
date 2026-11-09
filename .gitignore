@@ -5,3 +5,4 @@ __pycache__/
 /state/
 .pytest_cache/
 *.egg-info/
+.claude/settings.local.json
